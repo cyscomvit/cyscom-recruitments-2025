@@ -156,30 +156,18 @@ textarea:hover ~ #cursor {
     padding: 0 1vw;
     padding-top: 28vh;
     
-    /* Responsive background image */
+    /* Background image with particles overlay */
     background: url('Images/Background.png') center center/cover no-repeat;
     background-attachment: fixed;
-    overflow: hidden;
-    
-    /* Ensure it covers the full window */
     background-size: cover;
     background-position: center center;
-    
-    /* Ensure proper scaling on all devices */
-    background-repeat: no-repeat;
+    overflow: hidden;
     
     /* display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center; */
-}
-
-/* Fallback for devices that don't support background-attachment: fixed */
-@supports not (background-attachment: fixed) {
-    #page1 {
-        background-attachment: scroll;
-    }
 }
 
 #page1 h1 {
