@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyscom Cabinet Portal - Recruitments 2025</title>
+    <link rel="shortcut icon" href="https://twogood.com.au/favicon-32x32.png" type="image/x-icon">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.0.0/fonts/remixicon.css" rel="stylesheet">
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'HelveticaNowText-Regular', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: rgb(100, 90, 240);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .sign-out-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .sign-out-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .login-card {
+            background: white;
+            padding: 3rem;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .login-card h1 {
+            margin: 0 0 0.5rem 0;
+            color: #333;
+            font-size: 2rem;
+        }
+
+        .login-card p {
+            color: #666;
+            margin-bottom: 2rem;
+        }
+
+        .google-btn {
+            width: 100%;
+            padding: 15px;
+            background: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            margin-bottom: 1rem;
+        }
+
+        .google-btn:hover:not(:disabled) {
+            background: #3367d6;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(66, 133, 244, 0.3);
+        }
+
+        .google-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            border: 1px solid #ffcdd2;
+        }
+
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .dashboard-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease;
+            text-align: center;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .dashboard-card h3 {
+            margin: 0 0 0.5rem 0;
+            color: #333;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .dashboard-card .number {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 0.3rem;
+        }
+
+        .dashboard-card .label {
+            color: #666;
+            font-size: 0.75rem;
+        }
+
+        .applications-section {
+            background: rgb(33, 23, 175);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 1rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin: 0;
+        }
+
+        .logo {
+            margin-bottom: 30px;
+        }
+
+        .logo img {
+            height: 80px;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+        }
+
+        .export-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            border-left: 10px;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .export-btn:hover {
+            background: #218838;
+            transform: translateY(-1px);
+        }
+
+        .applications-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .applications-table th,
+        .applications-table td {
+            text-align: left;
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .applications-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .applications-table tr:hover {
+            background: #11c6e6;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-new { background: #e3f2fd; color: #1976d2; }
+        .status-reviewed { background: #f3e5f5; color: #7b1fa2; }
+        .status-shortlisted { background: #e8f5e8; color: #2e7d32; }
+        .status-rejected { background: #ffebee; color: #c62828; }
+
+        /* Action buttons */
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .shortlist-btn {
+            background: #4caf50;
+            color: white;
+        }
+
+        .shortlist-btn:hover:not(:disabled) {
+            background: #45a049;
+            transform: translateY(-1px);
+        }
+
+        .reject-btn {
+            background: #f44336;
+            color: white;
+        }
+
+        .reject-btn:hover:not(:disabled) {
+            background: #da190b;
+            transform: translateY(-1px);
+        }
+
+        .view-btn {
+            background: #2196f3;
+            color: white;
+        }
+
+        .view-btn:hover {
+            background: #1976d2;
+            transform: translateY(-1px);
+        }
+
+        /* Search Controls */
+        .search-controls {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .search-group {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-input, .department-filter, .status-filter {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+            color: #333;
+        }
+
+        .search-input {
+            flex: 2;
+            min-width: 200px;
+        }
+
+        .department-filter, .status-filter {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .search-input:focus, .department-filter:focus, .status-filter:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .main-content {
+                padding: 1rem;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .applications-table {
+                font-size: 14px;
+            }
+
+            .search-group {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .search-input, .department-filter, .status-filter {
+                width: 100%;
+                min-width: auto;
+            }
+        }
+    </style>
+
+    <!-- React and Firebase -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+      import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
+      import { getFirestore, collection, getDocs, query, orderBy, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
+      import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
+      
+      const firebaseConfig = {
+        apiKey: "AIzaSyDd4tqtajZcvTinZHUDXMWQIkBSeeO3lZ4",
+        authDomain: "cyscom-recruitment-portal.firebaseapp.com",
+        projectId: "cyscom-recruitment-portal",
+        storageBucket: "cyscom-recruitment-portal.firebasestorage.app",
+        messagingSenderId: "1093153228555",
+        appId: "1:1093153228555:web:2a1b4b24187f571af3c40e",
+        measurementId: "G-RC5ZE3GEPM"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+      const auth = getAuth(app);
+      const provider = new GoogleAuthProvider();
+
+      let ADMIN_EMAILS = [];
+
+    //firebase
+      async function loadAdminEmails() {
+        try {
+          const adminDoc = await getDoc(doc(db, 'adminEmails', 'admin1'));
+          if (adminDoc.exists()) {
+            ADMIN_EMAILS = adminDoc.data().emails || [];
+            console.log('✅ Admin emails loaded from Firebase:', ADMIN_EMAILS);
+          } else {
+            console.warn('⚠️ Admin emails document not found in Firebase');
+            // Fallback 
+            ADMIN_EMAILS = ['admin@cyscom.com'];
+          }
+        } catch (error) {
+          console.error('❌ Error loading admin emails:', error);
+          // Fallback
+          ADMIN_EMAILS = ['admin@cyscom.com'];
+        }
+      }
+
+      window.firebase = { 
+        app, db, auth, provider, 
+        signInWithPopup, signOut, onAuthStateChanged,
+        collection, getDocs, query, orderBy, doc, getDoc,
+        loadAdminEmails,
+        isAdmin: (email) => ADMIN_EMAILS.includes(email),
+        getAdminEmails: () => ADMIN_EMAILS
+      };
+      
+      console.log('✅ Firebase initialized');
+    </script>
+</head>
+
+<body>
+    <!-- Login Screen -->
+    <div id="login-screen" class="login-container">
+        <div class="login-card">
+            <div class="logo">
+                <img src="Images/logo.png" alt="Cyscom Logo" onerror="this.style.display='none'">
+            </div>
+            <h1>Cyscom Login</h1>
+            <p>Sign in with your authorized Google account</p>
+            
+            <div id="error-container" class="hidden">
+                <div class="error-message" id="error-message"></div>
+            </div>
+            
+            <button id="google-signin-btn" class="google-btn">
+                Sign in with Google
+            </button>
+            
+            <p style="font-size: 14px; color: #888;">
+                Only authorized accounts can access this dashboard
+            </p>
+        </div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div id="dashboard-screen" class="hidden">
+        <header class="header">
+            <div class="header-content">
+                <h1>Admin Dashboard</h1>
+                <div class="user-info">
+                    <img id="user-avatar" class="user-avatar" src="" alt="User">
+                    <span id="user-name">Loading...</span>
+                    <button id="sign-out-btn" class="sign-out-btn">Sign Out</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <!-- Dashboard Stats -->
+            <div class="dashboard-grid">
+                <div class="dashboard-card">
+                    <h3>Total Applications</h3>
+                    <div class="number" id="total-applications">-</div>
+                    <div class="label">All time submissions</div>
+                </div>
+                <div class="dashboard-card">
+                    <h3>Today's Applications</h3>
+                    <div class="number" id="today-applications">-</div>
+                    <div class="label">New submissions today</div>
+                </div>
+                <div class="dashboard-card">
+                    <h3>Shortlisted</h3>
+                    <div class="number" id="shortlisted-count">-</div>
+                    <div class="label">Candidates reviewed</div>
+                </div>
+                <div class="dashboard-card">
+                    <h3>This Week</h3>
+                    <div class="number" id="week-applications">-</div>
+                    <div class="label">Applications this week</div>
+                </div>
+            </div>
+
+            <!-- Applications Table -->
+            <div class="applications-section">
+                <div class="section-header">
+                    <h2 class="section-title">Recent Applications</h2>
+                    <h2>&nbsp;&nbsp;&nbsp;&nbsp;</h2>
+                    <button id="export-btn" class="export-btn"> Export Data</button>
+                </div>
+                
+                <!-- Search and Filter Controls -->
+                <div class="search-controls">
+                    <div class="search-group">
+                        <input 
+                            type="text" 
+                            id="search-input" 
+                            placeholder="Search by name, email, or department..."
+                            class="search-input"
+                        >
+                        <select id="department-filter" class="department-filter">
+                            <option value="">All Departments</option>
+                            <option value="technical">Technical</option>
+                            <option value="design">Design</option>
+                            <option value="dev">Development</option>
+                            <option value="social-media">Social Media</option>
+                            <option value="content">Content</option>
+                            <option value="event-management">Event Management</option>
+                        </select>
+                            <option value="Other">Other</option>
+                        </select>
+                        <select id="status-filter" class="status-filter">
+                            <option value="">All Status</option>
+                            <option value="new">New</option>
+                            <option value="shortlisted">Shortlisted</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div id="applications-loading" class="loading">
+                    Loading applications...
+                </div>
+                
+                <div id="applications-container" class="hidden">
+                    <table class="applications-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Department</th>
+                                <th>Submitted</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="applications-tbody">
+                            <!-- Applications will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        class AdminDashboard {
+            constructor() {
+                this.currentUser = null;
+                this.applications = [];
+                this.filteredApplications = [];
+                this.adminEmailsLoaded = false;
+                this.init();
+            }
+
+            async init() {
+                this.setupElements();
+                this.setupEventListeners();
+                this.setupTabCloseSignOut();
+                
+                // Load admin emails first, then check auth state
+                await this.loadAdminEmails();
+                this.checkAuthState();
+            }
+
+            async loadAdminEmails() {
+                try {
+                    console.log('Loading admin emails from Firebase...');
+                    await window.firebase.loadAdminEmails();
+                    this.adminEmailsLoaded = true;
+                    console.log('Admin emails loaded:', window.firebase.getAdminEmails());
+                } catch (error) {
+                    console.error('Failed to load admin emails:', error);
+                    this.adminEmailsLoaded = true; // Continue with fallback emails
+                }
+            }
+
+            setupElements() {
+                this.loginScreen = document.getElementById('login-screen');
+                this.dashboardScreen = document.getElementById('dashboard-screen');
+                this.googleSigninBtn = document.getElementById('google-signin-btn');
+                this.signOutBtn = document.getElementById('sign-out-btn');
+                this.errorContainer = document.getElementById('error-container');
+                this.errorMessage = document.getElementById('error-message');
+                this.userAvatar = document.getElementById('user-avatar');
+                this.userName = document.getElementById('user-name');
+                this.exportBtn = document.getElementById('export-btn');
+                this.searchInput = document.getElementById('search-input');
+                this.departmentFilter = document.getElementById('department-filter');
+                this.statusFilter = document.getElementById('status-filter');
+            }
+
+            setupEventListeners() {
+                this.googleSigninBtn.addEventListener('click', () => this.signInWithGoogle());
+                this.signOutBtn.addEventListener('click', () => this.signOut());
+                this.exportBtn.addEventListener('click', () => this.exportApplications());
+                
+                // Search and filter event listeners
+                this.searchInput.addEventListener('input', () => this.filterApplications());
+                this.departmentFilter.addEventListener('change', () => this.filterApplications());
+                this.statusFilter.addEventListener('change', () => this.filterApplications());
+            }
+
+            setupTabCloseSignOut() {
+                // Sign out user when tab/window is closed
+                window.addEventListener('beforeunload', async (e) => {
+                    if (this.currentUser) {
+                        try {
+                            console.log('Tab closing - signing out user');
+                            await window.firebase.signOut(window.firebase.auth);
+                        } catch (error) {
+                            console.error('Error signing out on tab close:', error);
+                        }
+                    }
+                });
+
+                // Also handle visibility change (when user switches tabs or minimizes)
+                document.addEventListener('visibilitychange', () => {
+                    if (document.visibilityState === 'hidden' && this.currentUser) {
+                        console.log('Tab hidden - user will be signed out on return');
+                    }
+                });
+
+                // Sign out after 30 minutes of inactivity
+                this.setupIdleTimeout();
+            }
+
+            setupIdleTimeout() {
+                let idleTimer;
+                const IDLE_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+
+                const resetIdleTimer = () => {
+                    clearTimeout(idleTimer);
+                    if (this.currentUser) {
+                        idleTimer = setTimeout(async () => {
+                            try {
+                                console.log('User idle for 30 minutes - signing out');
+                                alert('You have been signed out due to inactivity.');
+                                await this.signOut();
+                            } catch (error) {
+                                console.error('Error during idle sign out:', error);
+                            }
+                        }, IDLE_TIMEOUT);
+                    }
+                };
+
+                // Track user activity
+                ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'].forEach(event => {
+                    document.addEventListener(event, resetIdleTimer, true);
+                });
+
+                resetIdleTimer();
+            }
+
+            checkAuthState() {
+                // Wait for admin emails to load before checking auth
+                const checkAuth = () => {
+                    if (!this.adminEmailsLoaded) {
+                        setTimeout(checkAuth, 100);
+                        return;
+                    }
+
+                    window.firebase.onAuthStateChanged(window.firebase.auth, (user) => {
+                        if (user && window.firebase.isAdmin(user.email)) {
+                            this.currentUser = user;
+                            this.showDashboard();
+                            this.loadApplications();
+                        } else if (user) {
+                            this.showError(`Access denied. ${user.email} is not authorized for admin access.`);
+                            window.firebase.signOut(window.firebase.auth);
+                        } else {
+                            this.showLogin();
+                        }
+                    });
+                };
+
+                checkAuth();
+            }
+
+            async signInWithGoogle() {
+                try {
+                    this.googleSigninBtn.disabled = true;
+                    this.googleSigninBtn.textContent = '🔄 Signing in...';
+                    this.hideError();
+
+                    // Ensure admin emails are loaded
+                    if (!this.adminEmailsLoaded) {
+                        this.googleSigninBtn.textContent = '🔄 Loading admin settings...';
+                        await this.loadAdminEmails();
+                    }
+
+                    const result = await window.firebase.signInWithPopup(
+                        window.firebase.auth, 
+                        window.firebase.provider
+                    );
+                    
+                    const user = result.user;
+                    
+                    if (!window.firebase.isAdmin(user.email)) {
+                        await window.firebase.signOut(window.firebase.auth);
+                        this.showError(`Access denied. ${user.email} is not authorized for admin access.`);
+                        return;
+                    }
+
+                } catch (error) {
+                    console.error('Sign in error:', error);
+                    
+                    if (error.code === 'auth/popup-blocked') {
+                        this.showError('Popup was blocked. Please allow popups and try again.');
+                    } else if (error.code === 'auth/popup-closed-by-user') {
+                        this.showError('Sign in was cancelled. Please try again.');
+                    } else {
+                        this.showError('Sign in failed. Please try again.');
+                    }
+                } finally {
+                    this.googleSigninBtn.disabled = false;
+                    this.googleSigninBtn.textContent = '🔐 Sign in with Google';
+                }
+            }
+
+            async signOut() {
+                try {
+                    await window.firebase.signOut(window.firebase.auth);
+                    this.currentUser = null;
+                } catch (error) {
+                    console.error('Sign out error:', error);
+                }
+            }
+
+            showLogin() {
+                this.loginScreen.classList.remove('hidden');
+                this.dashboardScreen.classList.add('hidden');
+            }
+
+            showDashboard() {
+                this.loginScreen.classList.add('hidden');
+                this.dashboardScreen.classList.remove('hidden');
+                
+                if (this.currentUser) {
+                    this.userAvatar.src = this.currentUser.photoURL || '';
+                    this.userName.textContent = this.currentUser.displayName || this.currentUser.email;
+                }
+            }
+
+            showError(message) {
+                this.errorMessage.textContent = message;
+                this.errorContainer.classList.remove('hidden');
+            }
+
+            hideError() {
+                this.errorContainer.classList.add('hidden');
+            }
+
+            async loadApplications() {
+                try {
+                    console.log('Loading applications from Firebase...');
+                    const applicationsRef = window.firebase.collection(window.firebase.db, 'applications');
+                    const q = window.firebase.query(applicationsRef, window.firebase.orderBy('timestamp', 'desc'));
+                    const querySnapshot = await window.firebase.getDocs(q);
+                    
+                    this.applications = [];
+                    const applicationPromises = [];
+                    
+                    querySnapshot.forEach((doc) => {
+                        const appData = doc.data();
+                        console.log('Application data:', appData); // Debug log
+                        
+                        const appWithId = { 
+                            id: doc.id, 
+                            ...appData,
+                            reviewStatus: 'new' // Default status
+                        };
+                        
+                        this.applications.push(appWithId);
+                        
+                        // Check if this application exists in shortlisted or rejected collections
+                        applicationPromises.push(this.checkApplicationReviewStatus(doc.id));
+                    });
+                    
+                    // Wait for all review status checks to complete
+                    const reviewStatuses = await Promise.all(applicationPromises);
+                    
+                    // Update applications with their review status
+                    reviewStatuses.forEach((status, index) => {
+                        if (status) {
+                            this.applications[index].reviewStatus = status;
+                        }
+                    });
+
+                    console.log(`✅ Loaded ${this.applications.length} applications`);
+                    this.updateStats();
+                    this.filteredApplications = [...this.applications]; // Initialize filtered applications
+                    this.renderApplicationsTable();
+                    
+                } catch (error) {
+                    console.error('❌ Error loading applications:', error);
+                    
+                    // Show error message to user
+                    const loadingDiv = document.getElementById('applications-loading');
+                    loadingDiv.innerHTML = `
+                        <div style="color: #c62828; text-align: center; padding: 2rem;">
+                            <h3>⚠️ Failed to load applications</h3>
+                            <p>Error: ${error.message}</p>
+                            <button onclick="location.reload()" style="padding: 8px 16px; margin-top: 1rem; background: #4285f4; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                Retry
+                            </button>
+                        </div>
+                    `;
+                }
+            }
+
+            async checkApplicationReviewStatus(appId) {
+                try {
+                    // Check shortlisted collection first
+                    const shortlistedDoc = await window.firebase.getDoc(
+                        window.firebase.doc(window.firebase.db, 'shortlisted', appId)
+                    );
+                    
+                    if (shortlistedDoc.exists()) {
+                        return 'shortlisted';
+                    }
+                    
+                    // Check rejected collection
+                    const rejectedDoc = await window.firebase.getDoc(
+                        window.firebase.doc(window.firebase.db, 'rejected', appId)
+                    );
+                    
+                    if (rejectedDoc.exists()) {
+                        return 'rejected';
+                    }
+                    
+                    return 'new';
+                } catch (error) {
+                    console.error('Error checking review status:', error);
+                    return 'new';
+                }
+            }
+
+            updateStats() {
+                const total = this.applications.length;
+                const today = new Date().toDateString();
+                const todayCount = this.applications.filter(app => 
+                    app.timestamp && new Date(app.timestamp.seconds * 1000).toDateString() === today
+                ).length;
+
+                const weekStart = new Date();
+                weekStart.setDate(weekStart.getDate() - 7);
+                const weekCount = this.applications.filter(app => 
+                    app.timestamp && new Date(app.timestamp.seconds * 1000) >= weekStart
+                ).length;
+
+                document.getElementById('total-applications').textContent = total;
+                document.getElementById('today-applications').textContent = todayCount;
+                document.getElementById('week-applications').textContent = weekCount;
+                document.getElementById('shortlisted-count').textContent = this.applications.filter(app => app.reviewStatus === 'shortlisted').length;
+            }
+
+            filterApplications() {
+                const searchTerm = this.searchInput.value.toLowerCase().trim();
+                const departmentFilter = this.departmentFilter.value;
+                const statusFilter = this.statusFilter.value;
+
+                this.filteredApplications = this.applications.filter(app => {
+                    // Search filter (name, email, departments)
+                    const name = `${app.firstName || ''} ${app.lastName || ''}`.toLowerCase();
+                    const email = (app.email || '').toLowerCase();
+                    const departmentPrimary = (app.departmentPrimary || app.department || '').toLowerCase();
+                    const departmentSecondary = (app.departmentSecondary || '').toLowerCase();
+                    
+                    const matchesSearch = !searchTerm || 
+                        name.includes(searchTerm) || 
+                        email.includes(searchTerm) || 
+                        departmentPrimary.includes(searchTerm) ||
+                        departmentSecondary.includes(searchTerm);
+
+                    // Department filter - check both primary and secondary, plus old format
+                    const matchesDepartment = !departmentFilter || 
+                        app.departmentPrimary === departmentFilter || 
+                        app.departmentSecondary === departmentFilter ||
+                        app.department === departmentFilter;
+
+                    // Status filter
+                    const matchesStatus = !statusFilter || (app.reviewStatus || 'new') === statusFilter;
+
+                    return matchesSearch && matchesDepartment && matchesStatus;
+                });
+
+                this.renderApplicationsTable();
+            }
+
+            renderApplicationsTable() {
+                const tbody = document.getElementById('applications-tbody');
+                const loadingDiv = document.getElementById('applications-loading');
+                const container = document.getElementById('applications-container');
+
+                tbody.innerHTML = '';
+
+                const applicationsToRender = this.filteredApplications.length > 0 ? this.filteredApplications : this.applications;
+
+                if (applicationsToRender.length === 0) {
+                    const message = this.applications.length === 0 ? 
+                        "No applications found" : 
+                        "No applications match your search criteria";
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" style="text-align: center; color: black; padding: 2rem;">
+                                ${message}
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    applicationsToRender.slice(0, 50).forEach(app => {
+                        const row = document.createElement('tr');
+                        
+                        // Handle timestamp formatting
+                        let submitDate = 'N/A';
+                        if (app.timestamp) {
+                            if (app.timestamp.seconds) {
+                                // Firestore timestamp object
+                                submitDate = new Date(app.timestamp.seconds * 1000).toLocaleDateString();
+                            } else if (app.timestamp instanceof Date) {
+                                // JavaScript Date object
+                                submitDate = app.timestamp.toLocaleDateString();
+                            } else if (typeof app.timestamp === 'string') {
+                                // String date
+                                submitDate = new Date(app.timestamp).toLocaleDateString();
+                            }
+                        }
+                        
+                        // Extract name from firstName and lastName
+                        const name = `${app.firstName || ''} ${app.lastName || ''}`.trim() || 'N/A';
+                        
+                        // Extract department - handle both old single department and new dual department structure
+                        let department = 'N/A';
+                        if (app.departmentPrimary && app.departmentSecondary) {
+                            department = `1st: ${app.departmentPrimary}, 2nd: ${app.departmentSecondary}`;
+                        } else if (app.departmentPrimary) {
+                            department = `1st: ${app.departmentPrimary}`;
+                        } else if (app.department) {
+                            // Backward compatibility with old single department format
+                            department = app.department;
+                        }
+                        
+                        // Determine status and create status badge
+                        let statusClass = 'status-new';
+                        let statusText = 'New';
+                        
+                        if (app.reviewStatus === 'shortlisted') {
+                            statusClass = 'status-shortlisted';
+                            statusText = 'Shortlisted';
+                        } else if (app.reviewStatus === 'rejected') {
+                            statusClass = 'status-rejected';
+                            statusText = 'Rejected';
+                        } else if (app.reviewStatus === 'reviewed') {
+                            statusClass = 'status-reviewed';
+                            statusText = 'Reviewed';
+                        }
+                        
+                        // Create action buttons based on current status
+                        let actionButtons = '';
+                        if (app.reviewStatus !== 'shortlisted' && app.reviewStatus !== 'rejected') {
+                            actionButtons = `
+                                <div class="action-buttons">
+                                    <button class="action-btn view-btn" onclick="adminDashboard.showApplicationDetails('${app.id}')">View</button>
+                                    <button class="action-btn shortlist-btn" onclick="adminDashboard.shortlistApplication('${app.id}')">Shortlist</button>
+                                    <button class="action-btn reject-btn" onclick="adminDashboard.rejectApplication('${app.id}')">Reject</button>
+                                </div>
+                            `;
+                        } else {
+                            actionButtons = `
+                                <div class="action-buttons">
+                                    <button class="action-btn view-btn" onclick="adminDashboard.showApplicationDetails('${app.id}')">View</button>
+                                    <span style="font-size: 12px; color: #666;">${statusText}</span>
+                                </div>
+                            `;
+                        }
+                        
+                        row.innerHTML = `
+                            <td>${name}</td>
+                            <td>${app.email || 'N/A'}</td>
+                            <td>${department}</td>
+                            <td>${submitDate}</td>
+                            <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                            <td>${actionButtons}</td>
+                        `;
+                        
+                        tbody.appendChild(row);
+                    });
+                }
+
+                loadingDiv.classList.add('hidden');
+                container.classList.remove('hidden');
+            }
+
+            showApplicationDetails(appId) {
+                const app = this.applications.find(a => a.id === appId);
+                if (!app) {
+                    alert('Application not found');
+                    return;
+                }
+                
+                const details = [];
+                
+                // Add fields based on your Firebase structure
+                if (app.firstName || app.lastName) {
+                    details.push(`Name: ${app.firstName || ''} ${app.lastName || ''}`.trim());
+                }
+                if (app.email) details.push(`Email: ${app.email}`);
+                if (app.phone) details.push(`Phone: ${app.phone}`);
+                if (app.regNumber) details.push(`Registration Number: ${app.regNumber}`);
+                if (app.department) details.push(`Department: ${app.department}`);
+                if (app.year) details.push(`Year: ${app.year}`);
+                if (app.skills) details.push(`Skills: ${app.skills}`);
+                if (app.motivation) details.push(`Motivation: ${app.motivation}`);
+                if (app.contribution) details.push(`Contribution: ${app.contribution}`);
+                if (app.applicationId) details.push(`Application ID: ${app.applicationId}`);
+                if (app.ipHash) details.push(`IP Hash: ${app.ipHash}`);
+                if (app.userAgent) details.push(`User Agent: ${app.userAgent}`);
+                if (app.timestamp) {
+                    const date = app.timestamp.seconds ? 
+                        new Date(app.timestamp.seconds * 1000).toLocaleString() : 
+                        new Date(app.timestamp).toLocaleString();
+                    details.push(`Submitted: ${date}`);
+                }
+                
+                // Create a better modal-style display instead of alert
+                const modal = document.createElement('div');
+                modal.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0,0,0,0.5);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 10000;
+                `;
+                
+                const content = document.createElement('div');
+                content.style.cssText = `
+                    background: white;
+                    padding: 2rem;
+                    border-radius: 15px;
+                    max-width: 600px;
+                    max-height: 80vh;
+                    overflow-y: auto;
+                    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+                `;
+                
+                content.innerHTML = `
+                    <h2 style="margin-top: 0; color: #333;">Application Details</h2>
+                    <div style="line-height: 1.6; color: #555;">
+                        ${details.map(detail => `<p style="margin: 0.5rem 0;"><strong>${detail.split(': ')[0]}:</strong> ${detail.split(': ')[1] || 'N/A'}</p>`).join('')}
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" style="
+                        margin-top: 1.5rem;
+                        padding: 10px 20px;
+                        background: #667eea;
+                        color: white;
+                        border: none;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        font-weight: 500;
+                    ">Close</button>
+                `;
+                
+                modal.appendChild(content);
+                document.body.appendChild(modal);
+                
+                // Close modal when clicking outside
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        modal.remove();
+                    }
+                });
+            }
+
+            async shortlistApplication(appId) {
+                try {
+                    const app = this.applications.find(a => a.id === appId);
+                    if (!app) {
+                        alert('Application not found');
+                        return;
+                    }
+
+                    // Confirm action
+                    if (!confirm(`Are you sure you want to shortlist ${app.firstName} ${app.lastName}?`)) {
+                        return;
+                    }
+
+                    // Add to shortlisted collection in Firebase
+                    await firebase.firestore().collection('shortlisted').doc(appId).set({
+                        ...app,
+                        reviewStatus: 'shortlisted',
+                        reviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        reviewedBy: this.currentUser.email
+                    });
+
+                    // Update the local application status
+                    app.reviewStatus = 'shortlisted';
+
+                    // Refresh the table
+                    this.renderApplicationsTable();
+                    this.updateStats();
+
+                    alert(`Successfully shortlisted ${app.firstName} ${app.lastName}`);
+
+                } catch (error) {
+                    console.error('Error shortlisting application:', error);
+                    alert('Failed to shortlist application. Please try again.');
+                }
+            }
+
+            async rejectApplication(appId) {
+                try {
+                    const app = this.applications.find(a => a.id === appId);
+                    if (!app) {
+                        alert('Application not found');
+                        return;
+                    }
+
+                    // Confirm action
+                    if (!confirm(`Are you sure you want to reject ${app.firstName} ${app.lastName}?`)) {
+                        return;
+                    }
+
+                    // Add to rejected collection in Firebase
+                    await firebase.firestore().collection('rejected').doc(appId).set({
+                        ...app,
+                        reviewStatus: 'rejected',
+                        reviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        reviewedBy: this.currentUser.email
+                    });
+
+                    // Update the local application status
+                    app.reviewStatus = 'rejected';
+
+                    // Refresh the table
+                    this.renderApplicationsTable();
+                    this.updateStats();
+
+                    alert(`Successfully rejected ${app.firstName} ${app.lastName}`);
+
+                } catch (error) {
+                    console.error('Error rejecting application:', error);
+                    alert('Failed to reject application. Please try again.');
+                }
+            }
+
+            exportApplications() {
+                try {
+                    const csvContent = this.generateCSV();
+                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                    const link = document.createElement('a');
+                    
+                    if (link.download !== undefined) {
+                        const url = URL.createObjectURL(blob);
+                        link.setAttribute('href', url);
+                        link.setAttribute('download', `applications_${new Date().toISOString().split('T')[0]}.csv`);
+                        link.style.visibility = 'hidden';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    }
+                } catch (error) {
+                    console.error('Export error:', error);
+                    alert('Export failed. Please try again.');
+                }
+            }
+
+            generateCSV() {
+                const headers = [
+                    'First Name', 'Last Name', 'Email', 'Phone', 'Registration Number', 
+                    'Department (Primary)', 'Department (Secondary)', 'Year', 'Skills', 'Motivation', 'Contribution',
+                    'Review Status', 'Application ID', 'IP Hash', 'User Agent', 'Submission Time', 'Timestamp'
+                ];
+                
+                const rows = this.applications.map(app => {
+                    // Handle timestamp formatting for CSV
+                    let submitDate = '';
+                    let submissionTime = '';
+                    
+                    if (app.timestamp) {
+                        if (app.timestamp.seconds) {
+                            submitDate = new Date(app.timestamp.seconds * 1000).toLocaleString();
+                        } else if (app.timestamp instanceof Date) {
+                            submitDate = app.timestamp.toLocaleString();
+                        } else if (typeof app.timestamp === 'string') {
+                            submitDate = new Date(app.timestamp).toLocaleString();
+                        }
+                    }
+                    
+                    if (app.submissionTime) {
+                        submissionTime = new Date(app.submissionTime).toLocaleString();
+                    }
+                    
+                    return [
+                        app.firstName || '',
+                        app.lastName || '',
+                        app.email || '',
+                        app.phone || '',
+                        app.regNumber || '',
+                        app.departmentPrimary || app.department || '', // Handle both old and new format
+                        app.departmentSecondary || '',
+                        app.year || '',
+                        app.skills || '',
+                        app.motivation || '',
+                        app.contribution || '',
+                        app.reviewStatus || 'new',
+                        app.applicationId || '',
+                        app.ipHash || '',
+                        app.userAgent || '',
+                        submissionTime,
+                        submitDate
+                    ];
+                });
+
+                return [headers, ...rows]
+                    .map(row => row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(','))
+                    .join('\n');
+            }
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            // Create global instance for onclick handlers
+            window.adminDashboard = new AdminDashboard();
+        });
+    </script>
+</body>
+</html>

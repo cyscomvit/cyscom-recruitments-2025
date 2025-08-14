@@ -1,0 +1,21 @@
+RewriteEngine On
+
+# Redirect /cabinetlogin to cabinetlogin.html
+RewriteRule ^cabinetlogin/?$ cabinetlogin.html [L]
+
+# Optional: Redirect /admin to cabinetlogin as well
+RewriteRule ^admin/?$ cabinetlogin.html [L]
+
+# Security: Prevent access to sensitive files
+<Files "auth-config.js">
+    Order Allow,Deny
+    Allow from all
+</Files>
+
+# Optional: Add security headers
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options nosniff
+    Header always set X-Frame-Options DENY
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
