@@ -1,5 +1,4 @@
 # Firebase and Environment Configuration
-firebase-env.js
 .env
 .env.local
 .env.production
