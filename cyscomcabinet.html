@@ -401,7 +401,7 @@
     <!-- Firebase SDK -->
     <script type="module">
       import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
-      import { getFirestore, collection, getDocs, query, orderBy, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
+      import { getFirestore, collection, getDocs, query, orderBy, doc, getDoc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
       import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
       
       const firebaseConfig = {
@@ -427,29 +427,29 @@
           const adminDoc = await getDoc(doc(db, 'adminEmails', 'admin1'));
           if (adminDoc.exists()) {
             ADMIN_EMAILS = adminDoc.data().emails || [];
-            console.log('✅ Admin emails loaded from Firebase:', ADMIN_EMAILS);
+            
           } else {
-            console.warn('⚠️ Admin emails document not found in Firebase');
+            console.warn('Firebase issue');
             // Fallback 
-            ADMIN_EMAILS = ['admin@cyscom.com'];
+            ADMIN_EMAILS = ['aakansh15.gupta@gmail.com'];
           }
         } catch (error) {
-          console.error('❌ Error loading admin emails:', error);
+          console.error('Error loading:', error);
           // Fallback
-          ADMIN_EMAILS = ['admin@cyscom.com'];
+          ADMIN_EMAILS = ['aakansh15.gupta@gmail.com'];
         }
       }
 
       window.firebase = { 
         app, db, auth, provider, 
         signInWithPopup, signOut, onAuthStateChanged,
-        collection, getDocs, query, orderBy, doc, getDoc,
+        collection, getDocs, query, orderBy, doc, getDoc, setDoc, serverTimestamp,
         loadAdminEmails,
         isAdmin: (email) => ADMIN_EMAILS.includes(email),
         getAdminEmails: () => ADMIN_EMAILS
       };
       
-      console.log('✅ Firebase initialized');
+      console.log('Firebase initialized');
     </script>
 </head>
 
@@ -599,10 +599,10 @@
 
             async loadAdminEmails() {
                 try {
-                    console.log('Loading admin emails from Firebase...');
+                    
                     await window.firebase.loadAdminEmails();
                     this.adminEmailsLoaded = true;
-                    console.log('Admin emails loaded:', window.firebase.getAdminEmails());
+                    
                 } catch (error) {
                     console.error('Failed to load admin emails:', error);
                     this.adminEmailsLoaded = true; // Continue with fallback emails
@@ -821,7 +821,7 @@
                         }
                     });
 
-                    console.log(`✅ Loaded ${this.applications.length} applications`);
+                    console.log(`Loaded ${this.applications.length} applications`);
                     this.updateStats();
                     this.filteredApplications = [...this.applications]; // Initialize filtered applications
                     this.renderApplicationsTable();
@@ -1048,8 +1048,6 @@
                 if (app.motivation) details.push(`Motivation: ${app.motivation}`);
                 if (app.contribution) details.push(`Contribution: ${app.contribution}`);
                 if (app.applicationId) details.push(`Application ID: ${app.applicationId}`);
-                if (app.ipHash) details.push(`IP Hash: ${app.ipHash}`);
-                if (app.userAgent) details.push(`User Agent: ${app.userAgent}`);
                 if (app.timestamp) {
                     const date = app.timestamp.seconds ? 
                         new Date(app.timestamp.seconds * 1000).toLocaleString() : 
@@ -1124,13 +1122,19 @@
                         return;
                     }
 
-                    // Add to shortlisted collection in Firebase
-                    await firebase.firestore().collection('shortlisted').doc(appId).set({
+                    console.log('Attempting to shortlist application:', appId);
+                    console.log('Current user:', this.currentUser?.email);
+
+                    // Add to shortlisted collection in Firebase using v9 SDK
+                    const shortlistedRef = window.firebase.doc(window.firebase.db, 'shortlisted', appId);
+                    await window.firebase.setDoc(shortlistedRef, {
                         ...app,
                         reviewStatus: 'shortlisted',
-                        reviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        reviewedAt: window.firebase.serverTimestamp(),
                         reviewedBy: this.currentUser.email
                     });
+
+                    console.log('Successfully added to shortlisted collection');
 
                     // Update the local application status
                     app.reviewStatus = 'shortlisted';
@@ -1143,7 +1147,14 @@
 
                 } catch (error) {
                     console.error('Error shortlisting application:', error);
-                    alert('Failed to shortlist application. Please try again.');
+                    console.error('Error code:', error.code);
+                    console.error('Error message:', error.message);
+                    
+                    if (error.code === 'permission-denied') {
+                        alert(`Permission denied. Please ensure:\n1. You are signed in with an admin account\n2. Firestore security rules allow writes to 'shortlisted' collection\n3. Contact your administrator if the issue persists`);
+                    } else {
+                        alert(`Failed to shortlist application: ${error.message}\nPlease try again or contact support.`);
+                    }
                 }
             }
 
@@ -1160,13 +1171,19 @@
                         return;
                     }
 
-                    // Add to rejected collection in Firebase
-                    await firebase.firestore().collection('rejected').doc(appId).set({
+                    console.log('Attempting to reject application:', appId);
+                    console.log('Current user:', this.currentUser?.email);
+
+                    // Add to rejected collection in Firebase using v9 SDK
+                    const rejectedRef = window.firebase.doc(window.firebase.db, 'rejected', appId);
+                    await window.firebase.setDoc(rejectedRef, {
                         ...app,
                         reviewStatus: 'rejected',
-                        reviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        reviewedAt: window.firebase.serverTimestamp(),
                         reviewedBy: this.currentUser.email
                     });
+
+                    console.log('Successfully added to rejected collection');
 
                     // Update the local application status
                     app.reviewStatus = 'rejected';
@@ -1179,7 +1196,14 @@
 
                 } catch (error) {
                     console.error('Error rejecting application:', error);
-                    alert('Failed to reject application. Please try again.');
+                    console.error('Error code:', error.code);
+                    console.error('Error message:', error.message);
+                    
+                    if (error.code === 'permission-denied') {
+                        alert(`Permission denied. Please ensure:\n1. You are signed in with an admin account\n2. Firestore security rules allow writes to 'rejected' collection\n3. Contact your administrator if the issue persists`);
+                    } else {
+                        alert(`Failed to reject application: ${error.message}\nPlease try again or contact support.`);
+                    }
                 }
             }
 

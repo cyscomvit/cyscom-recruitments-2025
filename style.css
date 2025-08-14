@@ -43,10 +43,32 @@ body {
     /* background-color: burlywood; */
     position: fixed;
     z-index: 99;
-    padding: 25px;
+    padding: 5px;
     display: flex;  
     align-items: flex-start;
     justify-content: space-between;
+    top: 0;
+    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+}
+
+#nav.nav-hidden {
+    transform: translateY(-100%);
+    opacity: 0;
+    pointer-events: none;
+}
+
+#nav.nav-visible {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Ensure nav elements are visible when nav is visible */
+#nav.nav-visible #nav-part1,
+#nav.nav-visible #nav-part2,
+#nav.nav-visible #links {
+    transform: translateY(0) !important;
+    opacity: 1 !important;
 }
 
 #nav-part1 {
@@ -114,6 +136,17 @@ body {
     position: fixed;
     transform: translate(-50%, -50%) scale(0);
     transition: background-color 0.3s ease;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+/* Hide custom cursor in form areas */
+#page4 #cursor,
+form #cursor,
+input:hover ~ #cursor,
+select:hover ~ #cursor,
+textarea:hover ~ #cursor {
+    display: none !important;
 }
 
 #page1 {
@@ -312,7 +345,7 @@ body {
 }
 
 .container .listing .list-elem p{
-    font-size: 12px;
+    font-size: 16px;
     margin: 10px 10px;
     text-align: center;
 }
@@ -447,6 +480,7 @@ body {
     border-radius: 20px;
     padding: 2.5rem;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.0);
+    transition: all 0.5s ease;
 }
 
 /* Form Sections */
@@ -735,6 +769,12 @@ body {
     color: #FFFFFF;
 }
 
+.info-msg {
+    background: rgba(52, 152, 219, 0.1);
+    border: 2px solid rgba(52, 152, 219, 0.3);
+    color: #FFFFFF;
+}
+
 .message-icon {
     font-size: 2rem;
     margin-bottom: 1rem;
@@ -877,7 +917,7 @@ body {
 #footer #logo #copyright a{
     padding: 0 20px;
     text-decoration: none;
-    color: #000;
+    color: #ffffff;
     opacity: 0.5;
 }
 
@@ -911,6 +951,8 @@ body {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
+        top: 0;
+        transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
     }
 
     #nav-part1 {
@@ -1329,11 +1371,13 @@ body {
     margin: 0;
     padding: 0;
     list-style: none;
+    position: static; /* Ensure it's not positioned as fixed/sticky */
+    z-index: auto; /* Reset any high z-index */
 }
 
 .nav-tab {
     padding: 18px 25px;
-    cursor: pointer;
+    cursor: select;
     border-bottom: 3px solid transparent;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
@@ -3282,21 +3326,148 @@ body {
 
 /* Form Access Restriction */
 .form-restricted {
-    opacity: 0.5;
-    pointer-events: none;
-    user-select: none;
-    filter: blur(2px);
+    display: none !important;
     transition: all 0.3s ease;
 }
 
+/* Direct Google Sign-in Button (for form restriction notice) */
+.direct-google-auth-btn {
+    background: rgba(255,255,255,0.2);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.3);
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 1rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'HelveticaNowText-Regular', Arial, sans-serif;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.direct-google-auth-btn:hover {
+    background: rgba(255,255,255,0.3);
+    border-color: rgba(255,255,255,0.5);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(255,255,255,0.1);
+}
+
+.direct-google-auth-btn:active {
+    transform: translateY(0);
+}
+
+.direct-google-auth-btn i {
+    font-size: 18px;
+}
+
+.direct-google-auth-btn span {
+    font-weight: 500;
+}
+
+/* Authenticated User Info Section */
+.authenticated-user-info {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1.5rem;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.authenticated-user-info .user-details {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.authenticated-user-info .user-details i {
+    font-size: 18px;
+    opacity: 0.9;
+}
+
+.authenticated-user-info .user-email {
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.authenticated-user-info .auth-status {
+    font-size: 12px;
+    background: rgba(255,255,255,0.2);
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+.sign-out-btn {
+    background: rgba(255,255,255,0.2);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.3);
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'HelveticaNowText-Regular', Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.sign-out-btn:hover {
+    background: rgba(255,255,255,0.3);
+    border-color: rgba(255,255,255,0.5);
+    transform: translateY(-1px);
+}
+
+.sign-out-btn:active {
+    transform: translateY(0);
+}
+
+.sign-out-btn i {
+    font-size: 14px;
+}
+
+/* Responsive design for authenticated user info */
+@media screen and (max-width: 768px) {
+    .authenticated-user-info {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+    
+    .authenticated-user-info .user-details {
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    
+    .authenticated-user-info .user-email {
+        font-size: 13px;
+    }
+    
+    .sign-out-btn {
+        align-self: center;
+    }
+}
+
 .form-restriction-notice {
-    background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+    background: linear-gradient(135deg, #101725, #17223f);
     color: white;
     padding: 1.5rem;
     margin-bottom: 2rem;
     border-radius: 12px;
     text-align: center;
-    box-shadow: 0 4px 15px rgba(238, 90, 82, 0.3);
+    /* box-shadow: 0 4px 15px rgba(10, 226, 241, 0.3); */
 }
 
 .form-restriction-notice h3 {
@@ -3415,4 +3586,125 @@ body {
 
 .form-group {
     position: relative;
+}
+
+/* GlitchText Component Styles */
+.glitch {
+  color: #fff;
+  font-size: clamp(1rem, 5vw, 3rem);
+  white-space: nowrap;
+  font-weight: 900;
+  position: relative;
+  margin: 0 auto;
+  user-select: none;
+  cursor: pointer;
+  font-family: 'futura', sans-serif;
+}
+
+.glitch::after,
+.glitch::before {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  color: #fff;
+  background-color: transparent;
+  overflow: hidden;
+  clip-path: inset(0 0 0 0);
+}
+
+.glitch:not(.enable-on-hover)::after {
+  left: 2px;
+  text-shadow: var(--after-shadow, -5px 0 red);
+  animation: animate-glitch var(--after-duration, 3s) infinite linear alternate-reverse;
+}
+.glitch:not(.enable-on-hover)::before {
+  left: -2px;
+  text-shadow: var(--before-shadow, 5px 0 cyan);
+  animation: animate-glitch var(--before-duration, 2s) infinite linear alternate-reverse;
+}
+
+.glitch.enable-on-hover::after,
+.glitch.enable-on-hover::before {
+  content: '';
+  opacity: 0;
+  animation: none;
+}
+
+.glitch.enable-on-hover:hover::after {
+  content: attr(data-text);
+  opacity: 1;
+  left: 2px;
+  text-shadow: var(--after-shadow, -5px 0 red);
+  animation: animate-glitch var(--after-duration, 3s) infinite linear alternate-reverse;
+}
+.glitch.enable-on-hover:hover::before {
+  content: attr(data-text);
+  opacity: 1;
+  left: -2px;
+  text-shadow: var(--before-shadow, 5px 0 cyan);
+  animation: animate-glitch var(--before-duration, 2s) infinite linear alternate-reverse;
+}
+
+@keyframes animate-glitch {
+  0%   { clip-path: inset(20% 0 50% 0); }
+  5%   { clip-path: inset(10% 0 60% 0); }
+  10%  { clip-path: inset(15% 0 55% 0); }
+  15%  { clip-path: inset(25% 0 35% 0); }
+  20%  { clip-path: inset(30% 0 40% 0); }
+  25%  { clip-path: inset(40% 0 20% 0); }
+  30%  { clip-path: inset(10% 0 60% 0); }
+  35%  { clip-path: inset(15% 0 55% 0); }
+  40%  { clip-path: inset(25% 0 35% 0); }
+  45%  { clip-path: inset(30% 0 40% 0); }
+  50%  { clip-path: inset(20% 0 50% 0); }
+  55%  { clip-path: inset(10% 0 60% 0); }
+  60%  { clip-path: inset(15% 0 55% 0); }
+  65%  { clip-path: inset(25% 0 35% 0); }
+  70%  { clip-path: inset(30% 0 40% 0); }
+  75%  { clip-path: inset(40% 0 20% 0); }
+  80%  { clip-path: inset(20% 0 50% 0); }
+  85%  { clip-path: inset(10% 0 60% 0); }
+  90%  { clip-path: inset(15% 0 55% 0); }
+  95%  { clip-path: inset(25% 0 35% 0); }
+  100% { clip-path: inset(30% 0 40% 0); }
+}
+
+/* Adjustments for childInfo context */
+.childInfo .glitch {
+  font-size: clamp(1.1rem, 4vw, 2.5rem);
+  display: inline-block;
+  margin: 2px 0;
+  font-family: 'futura', sans-serif;
+}
+
+.childInfo .glitch.event-title {
+  font-weight: 700;
+  font-size: clamp(1.1rem, 3vw, 2.1rem);
+  font-family: 'futura', sans-serif;
+}
+
+.childInfo .glitch.event-year {
+  font-weight: 400;
+  font-size: clamp(1rem, 3.5vw, 2rem);
+  opacity: 0.9;
+  font-family: 'Helvetica', sans-serif;
+}
+
+/* Tilted Card Effects for page3 children */
+#page3 .child {
+  perspective: 800px;
+  transform-style: preserve-3d;
+  transition: transform 0.3s ease;
+  cursor: pointer;
+}
+
+#page3 .child:hover {
+  transform: scale(1.05);
+}
+
+#page3 .child img {
+  border-radius: 15px;
+  will-change: transform;
+  transform: translateZ(0);
+  transition: transform 0.1s ease-out;
 }

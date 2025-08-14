@@ -1,0 +1,46 @@
+.particles-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.particles-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* Ensure particles stay behind content */
+#page1 {
+  position: relative;
+  z-index: 1;
+}
+
+/* Make sure titles appear above particles */
+#page1 .main-title {
+  position: relative;
+  z-index: 2;
+}
+
+/* Ensure video container appears above particles */
+#video-container {
+  position: relative;
+  z-index: 2;
+}
+
+/* Fallback animation for when particles fail to load */
+@keyframes pulse {
+  0% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 0.7;
+  }
+}

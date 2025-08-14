@@ -16,7 +16,7 @@
   try {
     console.log('📦 Loading Firebase modules...');
     const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js');
-    const { getFirestore, collection, addDoc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js');
+    const { getFirestore, collection, addDoc, doc, updateDoc, setDoc, getDoc, getDocs, query, where, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js');
     const { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js');
     
     console.log('🚀 Initializing Firebase app...');
@@ -32,7 +32,14 @@
       db, 
       auth,
       collection, 
-      addDoc, 
+      addDoc,
+      doc,
+      updateDoc,
+      setDoc,
+      getDoc,
+      getDocs,
+      query,
+      where,
       serverTimestamp,
       // Auth functions
       GoogleAuthProvider,

@@ -25,7 +25,7 @@ const departments = [
         id: 'dev',
         name: 'Development',
         description: 'Web development',
-        color: '#141e36',
+        color: '#0859b6ff',
         icon: './Images/dEV.png',
         gradient: 'linear-gradient(135deg, #0859b6ff, #1f7ae2ff)'
     },
@@ -72,14 +72,14 @@ function AnimatedDepartmentSelector() {
         
         if (primaryInput && selectedDepartments.primary) {
             primaryInput.value = selectedDepartments.primary.id;
-            const event = new Event('change', { bubbles: true });
-            primaryInput.dispatchEvent(event);
+            // Don't dispatch change event immediately to avoid triggering form validation
+            // The form submission will handle validation when the user actually submits
         }
         
         if (secondaryInput && selectedDepartments.secondary) {
             secondaryInput.value = selectedDepartments.secondary.id;
-            const event = new Event('change', { bubbles: true });
-            secondaryInput.dispatchEvent(event);
+            // Don't dispatch change event immediately to avoid triggering form validation
+            // The form submission will handle validation when the user actually submits
         }
     }, [selectedDepartments]);
 
@@ -93,13 +93,39 @@ function AnimatedDepartmentSelector() {
             setSelectionMode('primary');
         };
 
+        const handleUpdateDepartmentSelection = (event) => {
+            const { department, type } = event.detail;
+            console.log('Received department update event:', department, type);
+            
+            // Find the department object by ID
+            const deptObj = departments.find(d => d.id === department);
+            if (deptObj) {
+                if (type === 'primary') {
+                    setSelectedDepartments(prev => ({
+                        ...prev,
+                        primary: deptObj
+                    }));
+                    if (!selectedDepartments.primary) {
+                        setSelectionMode('secondary');
+                    }
+                } else if (type === 'secondary') {
+                    setSelectedDepartments(prev => ({
+                        ...prev,
+                        secondary: deptObj
+                    }));
+                }
+            }
+        };
+
         window.addEventListener('resetDepartmentSelector', handleReset);
+        window.addEventListener('updateDepartmentSelection', handleUpdateDepartmentSelection);
         
         // Cleanup
         return () => {
             window.removeEventListener('resetDepartmentSelector', handleReset);
+            window.removeEventListener('updateDepartmentSelection', handleUpdateDepartmentSelection);
         };
-    }, []);
+    }, [selectedDepartments]);
 
     // Handle scroll progress
     useEffect(() => {
@@ -167,61 +193,6 @@ function AnimatedDepartmentSelector() {
             padding: '20px 0'
         }
     }, [
-        // Progress indicator
-        React.createElement('div', {
-            key: 'progress-container',
-            style: {
-                position: 'absolute',
-                top: '-70px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                zIndex: 10
-            }
-        }, 
-            React.createElement('div', {
-                style: {
-                    width: '80px',
-                    height: '80px',
-                    position: 'relative'
-                }
-            }, [
-                React.createElement('svg', {
-                    key: 'progress-svg',
-                    width: '80',
-                    height: '80',
-                    viewBox: '0 0 100 100',
-                    style: { 
-                        transform: 'rotate(-90deg)',
-                        position: 'absolute'
-                    }
-                }, [
-                    React.createElement('circle', {
-                        key: 'bg-circle',
-                        cx: '50',
-                        cy: '50',
-                        r: '30',
-                        stroke: '#e0e0e0',
-                        strokeWidth: '8',
-                        fill: 'none'
-                    }),
-                    React.createElement('circle', {
-                        key: 'progress-circle',
-                        cx: '50',
-                        cy: '50',
-                        r: '30',
-                        stroke: selectedDepartments.primary ? selectedDepartments.primary.color : '#667eea',
-                        strokeWidth: '8',
-                        fill: 'none',
-                        strokeDasharray: '188.4', // 2 * π * 30
-                        strokeDashoffset: `${188.4 * (1 - scrollProgress)}`,
-                        style: {
-                            transition: 'stroke 0.3s ease, stroke-dashoffset 0.1s ease'
-                        }
-                    })
-                ])
-            ])
-        ),
-
         // Selection mode toggle and current department indicator
         React.createElement('div', {
             key: 'selection-controls',
@@ -241,7 +212,11 @@ function AnimatedDepartmentSelector() {
             }, [
                 React.createElement('button', {
                     key: 'primary-btn',
-                    onClick: () => setSelectionMode('primary'),
+                    onClick: (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setSelectionMode('primary');
+                    },
                     style: {
                         padding: '8px 16px',
                         borderRadius: '20px',
@@ -255,7 +230,11 @@ function AnimatedDepartmentSelector() {
                 }, '1st Preference'),
                 React.createElement('button', {
                     key: 'secondary-btn',
-                    onClick: () => setSelectionMode('secondary'),
+                    onClick: (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setSelectionMode('secondary');
+                    },
                     style: {
                         padding: '8px 16px',
                         borderRadius: '20px',
@@ -730,7 +709,9 @@ function createFallbackSelector(container) {
     };
     
     // Mode toggle functionality
-    document.getElementById('primary-mode-btn').onclick = function() {
+    document.getElementById('primary-mode-btn').onclick = function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         selectionMode = 'primary';
         document.getElementById('primary-mode-btn').style.background = '#667eea';
         document.getElementById('primary-mode-btn').style.color = 'white';
@@ -738,7 +719,9 @@ function createFallbackSelector(container) {
         document.getElementById('secondary-mode-btn').style.color = '#333';
     };
     
-    document.getElementById('secondary-mode-btn').onclick = function() {
+    document.getElementById('secondary-mode-btn').onclick = function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         selectionMode = 'secondary';
         document.getElementById('secondary-mode-btn').style.background = '#667eea';
         document.getElementById('secondary-mode-btn').style.color = 'white';
@@ -803,14 +786,12 @@ function createFallbackSelector(container) {
         
         if (primaryInput && selectedDepartments.primary) {
             primaryInput.value = selectedDepartments.primary.id;
-            const event = new Event('change', { bubbles: true });
-            primaryInput.dispatchEvent(event);
+            // Don't dispatch change event to avoid triggering form validation
         }
         
         if (secondaryInput && selectedDepartments.secondary) {
             secondaryInput.value = selectedDepartments.secondary.id;
-            const event = new Event('change', { bubbles: true });
-            secondaryInput.dispatchEvent(event);
+            // Don't dispatch change event to avoid triggering form validation
         }
     }
 }
