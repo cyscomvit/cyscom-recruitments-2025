@@ -680,48 +680,6 @@
 
         // Smooth scrolling for navigation links
         document.addEventListener('DOMContentLoaded', function() {
-            // Enhanced mobile debugging
-            console.log('📄 Page loaded:', {
-                url: window.location.href,
-                referrer: document.referrer,
-                isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
-                hasURLParams: window.location.search.length > 0,
-                timestamp: new Date().toISOString()
-            });
-            
-            // Mobile-specific network and auth monitoring
-            if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-                console.log('📱 Mobile device detected - Enabling enhanced authentication monitoring');
-                
-                // Monitor online/offline status for mobile
-                window.addEventListener('online', function() {
-                    console.log('🌐 Mobile device back online');
-                });
-                
-                window.addEventListener('offline', function() {
-                    console.warn('📵 Mobile device went offline');
-                });
-                
-                // Monitor visibility changes (mobile apps often get suspended)
-                document.addEventListener('visibilitychange', function() {
-                    if (document.visibilityState === 'visible' && window.firebase && window.firebase.auth.currentUser) {
-                        console.log('👁️ Mobile app became visible - Checking auth state');
-                        // Refresh auth token when app becomes visible on mobile
-                        window.firebase.auth.currentUser.getIdToken(true).catch(error => {
-                            console.warn('⚠️ Auth token refresh failed on visibility change:', error);
-                        });
-                    }
-                });
-                
-                // Add specific logging for mobile redirect handling
-                window.addEventListener('load', function() {
-                    console.log('📱 Window load event - checking if this is a redirect return');
-                    if (document.referrer.includes('accounts.google.com')) {
-                        console.log('🔄 Detected return from Google authentication');
-                    }
-                });
-            }
-            
             // Force scroll to top immediately
             window.scrollTo(0, 0);
             
@@ -1039,26 +997,41 @@
             let isAuthChecking = true;
 
             // Initialize authentication when Firebase is loaded
-            window.addEventListener('firebaseLoaded', function() {
-                console.log('🔥 Firebase loaded event received');
-                initializeAuth();
-                
-                // Additional check for mobile redirect scenarios
-                if (isMobileDevice() && document.referrer.includes('accounts.google.com')) {
-                    console.log('📱 Mobile redirect detected - additional auth check in 2 seconds');
-                    setTimeout(() => {
-                        console.log('🔍 Performing additional redirect result check...');
-                        checkRedirectResult();
-                    }, 2000);
-                }
-            });
+            window.addEventListener('firebaseLoaded', initializeAuth);
 
             function initializeAuth() {
-                console.log('🔐 Initializing Firebase Authentication...');
+                // Handle redirect result for mobile authentication
+                if (isMobileDevice()) {
+                    window.firebase.getRedirectResult(window.firebase.auth)
+                        .then(async (result) => {
+                            if (result.user) {
+                                console.log('Redirect authentication successful');
+                                const userEmail = result.user.email;
+                                
+                                // Check if email domain is allowed
+                                if (!userEmail.endsWith('@vitstudent.ac.in')) {
+                                    console.warn('Unauthorized domain:', userEmail);
+                                    await window.firebase.signOut(window.firebase.auth);
+                                    showTemporaryMessage('Only VIT Student emails (@vitstudent.ac.in) are allowed to access this form.', 'error');
+                                    return;
+                                }
+                                
+                                // Check for existing submission
+                                await checkExistingSubmission(userEmail);
+                                showTemporaryMessage('Successfully signed in!', 'success');
+                            }
+                        })
+                        .catch((error) => {
+                            console.error('Redirect result error:', error);
+                            if (error.code !== 'auth/no-current-user') {
+                                showTemporaryMessage('Authentication failed. Please try again.', 'error');
+                            }
+                        });
+                }
                 
-                // Set up auth state listener first
+                // Check authentication state - persist sessions across refreshes
                 window.firebase.onAuthStateChanged(window.firebase.auth, (user) => {
-                    console.log('🔄 Auth state changed:', user ? `Signed In: ${user.email}` : 'Signed Out');
+                    
                     currentUser = user;
                     isAuthChecking = false;
                     updateFormAccess(user);
@@ -1066,45 +1039,6 @@
 
                 // Setup auth event listeners
                 setupAuthEventListeners();
-                
-                // Check for redirect result after a small delay to ensure auth state is set up
-                setTimeout(() => {
-                    checkRedirectResult();
-                }, 100);
-            }
-
-            // Check for redirect result (essential for mobile authentication)
-            async function checkRedirectResult() {
-                try {
-                    console.log('🔍 Checking for redirect result...');
-                    const result = await window.firebase.getRedirectResult(window.firebase.auth);
-                    
-                    console.log('📱 Redirect result received:', {
-                        hasResult: !!result,
-                        hasUser: !!(result && result.user),
-                        userEmail: result && result.user ? result.user.email : 'none',
-                        credential: result && result.credential ? 'present' : 'none'
-                    });
-                    
-                    if (result && result.user) {
-                        console.log('✅ Redirect sign-in successful:', result.user.email);
-                        await handleSignInResult(result);
-                    } else if (result === null) {
-                        console.log('ℹ️ No redirect result found (normal for direct page load)');
-                    } else {
-                        console.log('⚠️ Empty redirect result received');
-                    }
-                } catch (error) {
-                    console.error('❌ Redirect result error:', error);
-                    if (error.code && error.code !== 'auth/no-current-user' && error.code !== 'auth/null-user') {
-                        console.error('🔴 Redirect authentication failed:', {
-                            code: error.code,
-                            message: error.message,
-                            isMobile: isMobileDevice()
-                        });
-                        showTemporaryMessage('Mobile authentication failed. Please try again.', 'error');
-                    }
-                }
             }
 
             function updateFormAccess(user) {
@@ -1113,14 +1047,9 @@
                 const recruitmentFormContainer = document.getElementById('recruitment-form-container');
                 const formMessages = document.getElementById('form-messages');
 
-                // Add mobile debugging overlay for development
-                if (isMobileDevice()) {
-                    addMobileDebugInfo(user);
-                }
-
                 if (user) {
                     // User is signed in - show form, hide overlay and user info bar
-                    console.log('✅ User authenticated, showing form:', user.email);
+                    
                     authOverlay.style.display = 'none';
                     userInfoBar.style.display = 'none'; // Hide user info bar for main page
                     
@@ -1158,7 +1087,7 @@
                     addUserInfoSection(user);
                 } else {
                     // User is not signed in - hide form, show restriction notice
-                    console.log('❌ No authenticated user, hiding form');
+                    
                     userInfoBar.style.display = 'none';
                     recruitmentFormContainer.classList.add('form-restricted');
                     
@@ -1194,51 +1123,6 @@
                     // Add restriction notice if not already present
                     addFormRestrictionNotice();
                 }
-            }
-
-            // Add mobile debugging overlay (only for development)
-            function addMobileDebugInfo(user) {
-                let debugDiv = document.getElementById('mobile-debug-info');
-                if (!debugDiv) {
-                    debugDiv = document.createElement('div');
-                    debugDiv.id = 'mobile-debug-info';
-                    debugDiv.style.cssText = `
-                        position: fixed;
-                        top: 0;
-                        left: 0;
-                        right: 0;
-                        background: rgba(0,0,0,0.8);
-                        color: white;
-                        padding: 10px;
-                        font-family: monospace;
-                        font-size: 12px;
-                        z-index: 9999;
-                        max-height: 150px;
-                        overflow-y: auto;
-                        border-bottom: 2px solid #007bff;
-                    `;
-                    document.body.appendChild(debugDiv);
-                }
-                
-                const authState = user ? 'AUTHENTICATED' : 'NOT_AUTHENTICATED';
-                const timestamp = new Date().toLocaleTimeString();
-                
-                debugDiv.innerHTML = `
-                    <div><strong>📱 MOBILE DEBUG - ${timestamp}</strong></div>
-                    <div>🔐 Auth State: ${authState}</div>
-                    <div>👤 User: ${user ? user.email : 'None'}</div>
-                    <div>🌐 URL: ${window.location.href}</div>
-                    <div>🔄 Referrer: ${document.referrer || 'Direct'}</div>
-                    <div>📱 Is Mobile: ${isMobileDevice()}</div>
-                    <div style="margin-top: 5px;">
-                        <button onclick="window.refreshAuthState()" style="background: #007bff; color: white; border: none; padding: 5px; border-radius: 3px; cursor: pointer;">
-                            Refresh Auth
-                        </button>
-                        <button onclick="document.getElementById('mobile-debug-info').remove()" style="background: #dc3545; color: white; border: none; padding: 5px; border-radius: 3px; cursor: pointer; margin-left: 5px;">
-                            Hide Debug
-                        </button>
-                    </div>
-                `;
             }
 
             function resetFormData() {
@@ -1356,98 +1240,81 @@
                 }
             }
 
-            // Detect mobile device for authentication method selection
+            // Function to detect mobile devices
             function isMobileDevice() {
                 return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-                       (typeof window.orientation !== "undefined") ||
-                       (navigator.maxTouchPoints > 1);
+                       (window.innerWidth <= 768 && 'ontouchstart' in window);
             }
 
             async function signInWithGoogle() {
                 try {
-                    console.log('🔐 Initiating Google Sign In...');
                     const provider = new window.firebase.GoogleAuthProvider();
                     provider.setCustomParameters({
                         prompt: 'select_account'
                     });
                     
-                    const isMobile = isMobileDevice();
-                    console.log('📱 Device type:', isMobile ? 'Mobile' : 'Desktop');
-                    console.log('🌐 Current URL:', window.location.href);
-                    console.log('🔐 Auth state before sign-in:', window.firebase.auth.currentUser ? 'Signed In' : 'Signed Out');
+                    let result;
+                    let userEmail;
                     
-                    if (isMobile) {
-                        // Use redirect for mobile devices (more reliable)
-                        console.log('📱 Using redirect sign-in for mobile device...');
-                        console.log('🚀 Initiating redirect to Google...');
+                    // Use redirect for mobile devices, popup for desktop
+                    if (isMobileDevice()) {
+                        console.log('Mobile device detected, using redirect authentication');
                         
-                        // Show loading message for mobile redirect
-                        showTemporaryMessage('Redirecting to Google Sign In...', 'info');
+                        // Check if we're returning from a redirect
+                        const redirectResult = await window.firebase.getRedirectResult(window.firebase.auth);
                         
-                        await window.firebase.signInWithRedirect(window.firebase.auth, provider);
-                        // Note: The page will reload and the result will be handled by checkRedirectResult()
-                        console.log('📱 Redirect initiated (page will reload)');
-                        return;
+                        if (redirectResult.user) {
+                            // User just returned from redirect
+                            result = redirectResult;
+                            userEmail = result.user.email;
+                            console.log('Authentication completed via redirect');
+                        } else {
+                            // Start the redirect process
+                            console.log('Starting redirect authentication...');
+                            showTemporaryMessage('Redirecting to Google Sign-in...', 'info');
+                            await window.firebase.signInWithRedirect(window.firebase.auth, provider);
+                            return; // Function will be called again after redirect
+                        }
                     } else {
-                        // Use popup for desktop devices
-                        console.log('💻 Using popup sign-in for desktop device...');
-                        const result = await window.firebase.signInWithPopup(window.firebase.auth, provider);
-                        await handleSignInResult(result);
+                        // Desktop - use popup
+                        console.log('Desktop device detected, using popup authentication');
+                        result = await window.firebase.signInWithPopup(window.firebase.auth, provider);
+                        userEmail = result.user.email;
                     }
                     
+                    // Generate and log the document ID that will be used
+                    const expectedDocId = hashEmail(userEmail);
+                    
+                    // Check if email domain is allowed
+                    if (!userEmail.endsWith('@vitstudent.ac.in')) {
+                        console.warn('Unauthorized domain:', userEmail);
+                        await window.firebase.signOut(window.firebase.auth);
+                        showTemporaryMessage('Only VIT Student emails (@vitstudent.ac.in) are allowed to access this form.', 'error');
+                        return;
+                    }
+                    
+                    // Check for existing submission
+                    await checkExistingSubmission(userEmail);
+                    
+                    // Show success message temporarily
+                    showTemporaryMessage('Successfully signed in!', 'success');
+                    
                 } catch (error) {
-                    console.error('❌ Sign in error:', error);
-                    await handleSignInError(error);
+                    console.error('Sign in error:', error);
+                    let errorMessage = 'Sign in failed. Please try again.';
+                    
+                    if (error.code === 'auth/popup-closed-by-user') {
+                        errorMessage = 'Sign in was cancelled. Please try again.';
+                    } else if (error.code === 'auth/popup-blocked') {
+                        errorMessage = 'Popup was blocked. Please allow popups and try again.';
+                    } else if (error.code === 'auth/cancelled-popup-request') {
+                        errorMessage = 'Another sign-in process is already in progress.';
+                    } else if (error.code === 'auth/operation-not-allowed') {
+                        errorMessage = 'Google sign-in is not enabled. Please contact support.';
+                    }
+                    
+                    showTemporaryMessage(errorMessage, 'error');
                 }
-            }
-
-            // Handle successful sign-in result
-            async function handleSignInResult(result) {
-                if (!result || !result.user) return;
-                
-                const userEmail = result.user.email;
-                console.log('✅ Sign-in successful:', userEmail);
-                
-                // Generate and log the document ID that will be used
-                const expectedDocId = hashEmail(userEmail);
-                console.log('📄 Expected document ID:', expectedDocId);
-                
-                // Check if email domain is allowed
-                if (!userEmail.endsWith('@vitstudent.ac.in')) {
-                    console.warn('❌ Unauthorized domain:', userEmail);
-                    await window.firebase.signOut(window.firebase.auth);
-                    showTemporaryMessage('Only VIT Student emails (@vitstudent.ac.in) are allowed to access this form.', 'error');
-                    return;
-                }
-                
-                // Check for existing submission
-                await checkExistingSubmission(userEmail);
-                
-                // Show success message temporarily
-                showTemporaryMessage('Successfully signed in!', 'success');
-            }
-
-            // Handle sign-in errors
-            async function handleSignInError(error) {
-                let errorMessage = 'Sign in failed. Please try again.';
-                
-                if (error.code === 'auth/popup-closed-by-user') {
-                    errorMessage = 'Sign in was cancelled. Please try again.';
-                } else if (error.code === 'auth/popup-blocked') {
-                    errorMessage = 'Popup was blocked. Please allow popups and try again.';
-                } else if (error.code === 'auth/network-request-failed') {
-                    errorMessage = 'Network error. Please check your connection and try again.';
-                } else if (error.code === 'auth/too-many-requests') {
-                    errorMessage = 'Too many sign-in attempts. Please try again later.';
-                }
-                
-                console.error('🔴 Sign-in error details:', {
-                    code: error.code,
-                    message: error.message,
-                    isMobile: isMobileDevice()
-                });
-                
-                showTemporaryMessage(errorMessage, 'error');
             }
 
             // Simple hash function to create consistent document IDs from email
@@ -1621,29 +1488,6 @@
                 }
             }
 
-            // Force re-authentication for mobile permission issues
-            async function forceReAuthentication() {
-                try {
-                    console.log('🔄 Forcing re-authentication...');
-                    
-                    // Sign out first
-                    await window.firebase.signOut(window.firebase.auth);
-                    
-                    // Clear any cached tokens
-                    localStorage.removeItem('firebase-auth-user');
-                    sessionStorage.removeItem('firebase-auth-user');
-                    
-                    // Wait a moment then show auth overlay
-                    setTimeout(() => {
-                        showAuthOverlay();
-                        showTemporaryMessage('Please sign in again to continue.', 'info');
-                    }, 1000);
-                    
-                } catch (error) {
-                    console.error('Re-authentication error:', error);
-                }
-            }
-
             async function signOutUser() {
                 try {
                     console.log('Signing out...');
@@ -1753,36 +1597,8 @@
                 }, 3000);
             }
 
-            // Manual auth state refresh for debugging
-            window.refreshAuthState = async function() {
-                console.log('🔄 Manual auth state refresh requested');
-                try {
-                    const user = window.firebase.auth.currentUser;
-                    console.log('👤 Current auth user:', user ? {
-                        uid: user.uid,
-                        email: user.email,
-                        emailVerified: user.emailVerified
-                    } : 'null');
-                    
-                    // Force trigger auth state change
-                    updateFormAccess(user);
-                    
-                    // Try to refresh token if user exists
-                    if (user) {
-                        const token = await user.getIdToken(true);
-                        console.log('🎫 Token refreshed successfully');
-                    }
-                    
-                    // Try checking redirect result again
-                    await checkRedirectResult();
-                } catch (error) {
-                    console.error('❌ Manual auth refresh failed:', error);
-                }
-            };
-
             // Initialize auth when Firebase is ready
             if (window.firebaseLoaded) {
-                console.log('🔥 Firebase already loaded, initializing auth immediately');
                 initializeAuth();
             }
 
@@ -1845,35 +1661,11 @@
                     return false;
                 }
 
-                // Enhanced Authentication check with mobile debugging
+                // Authentication check
                 if (!currentUser) {
-                    console.error('❌ No authenticated user found');
                     showError('Please sign in before submitting your application.');
                     showAuthOverlay();
                     return;
-                }
-
-                // Enhanced mobile-specific authentication verification
-                const isMobile = isMobileDevice();
-                console.log('📱 Form submission - Device type:', isMobile ? 'Mobile' : 'Desktop');
-                console.log('👤 Current user:', {
-                    uid: currentUser.uid,
-                    email: currentUser.email,
-                    emailVerified: currentUser.emailVerified
-                });
-
-                // For mobile devices, double-check auth token validity
-                if (isMobile) {
-                    try {
-                        // Force token refresh for mobile to ensure validity
-                        await currentUser.getIdToken(true);
-                        console.log('✅ Mobile auth token refreshed successfully');
-                    } catch (tokenError) {
-                        console.error('❌ Mobile auth token refresh failed:', tokenError);
-                        showError('Authentication expired. Please sign in again.');
-                        forceReAuthentication();
-                        return;
-                    }
                 }
 
                 
@@ -2051,42 +1843,14 @@
                             
                             
                             // Log failed submission
-                            // Enhanced mobile-specific debugging for permission-denied
-                            const deviceInfo = {
-                                isMobile: isMobileDevice(),
-                                userAgent: navigator.userAgent.substring(0, 100),
-                                platform: navigator.platform,
-                                authMethod: isMobileDevice() ? 'redirect' : 'popup',
-                                currentUser: currentUser ? {
-                                    uid: currentUser.uid,
-                                    email: currentUser.email,
-                                    emailVerified: currentUser.emailVerified
-                                } : null,
-                                authToken: currentUser ? 'present' : 'missing'
-                            };
-                            
-                            console.error('🔴 PERMISSION DENIED - Mobile Debug Info:', deviceInfo);
-                            
-                            // Log security event with mobile context
                             window.securityManager.logSecurityEvent('FORM_SUBMISSION_FAILED', {
                                 errorCode: firebaseError.code,
-                                errorMessage: firebaseError.message,
-                                deviceInfo: deviceInfo
+                                errorMessage: firebaseError.message
                             });
                             
                             // Show specific Firebase error or fallback to generic message
                             if (firebaseError.code === 'permission-denied') {
-                                const errorMsg = `Permission denied. ${deviceInfo.isMobile ? 'Mobile device detected. ' : ''}Please try signing out and signing back in.`;
-                                showError(errorMsg);
-                                
-                                // For mobile devices, suggest re-authentication
-                                if (deviceInfo.isMobile && currentUser) {
-                                    setTimeout(() => {
-                                        if (confirm('Mobile authentication issue detected. Would you like to sign out and try again?')) {
-                                            signOutUser();
-                                        }
-                                    }, 3000);
-                                }
+                                showError('Permission denied. Please check Firestore security rules.');
                             } else if (firebaseError.code === 'unavailable') {
                                 showError('Firebase service unavailable. Please try again later.');
                             } else {
