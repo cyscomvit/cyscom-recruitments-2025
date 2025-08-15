@@ -117,6 +117,7 @@ const ReactRecruitmentForm = () => {
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitStatus, setSubmitStatus] = useState(null);
+    const [errorMessage, setErrorMessage] = useState('');
     const [validationState, setValidationState] = useState({});
 
     // Real-time validation
@@ -215,13 +216,41 @@ const ReactRecruitmentForm = () => {
         setSubmitStatus(null);
         
         try {
+            // Ensure user is authenticated (anonymously if needed)
+            let currentUser = window.firebase?.auth?.currentUser;
+            if (!currentUser && window.firebase?.signInAnonymously) {
+                try {
+                    const userCredential = await window.firebase.signInAnonymously(window.firebase.auth);
+                    currentUser = userCredential.user;
+                } catch (authError) {
+                    console.error('Anonymous authentication failed:', authError);
+                    setSubmitStatus('error');
+                    setErrorMessage('Authentication failed. Please try again.');
+                    setIsSubmitting(false);
+                    return;
+                }
+            }
+            
+            if (!currentUser) {
+                console.error('User authentication required for submission');
+                setSubmitStatus('error');
+                setErrorMessage('Authentication required. Please refresh the page and try again.');
+                setIsSubmitting(false);
+                return;
+            }
+            
             // Add metadata
             const applicationData = {
                 ...formData,
                 submissionTime: new Date().toISOString(),
                 timestamp: window.firebase?.serverTimestamp ? window.firebase.serverTimestamp() : new Date(),
                 applicationId: 'APP_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9).toUpperCase(),
-                source: 'react-enhanced'
+                source: 'react-enhanced',
+                authenticatedUser: {
+                    uid: currentUser.uid,
+                    isAnonymous: currentUser.isAnonymous,
+                    email: currentUser.email // Will be null for anonymous users
+                }
             };
             
             // Submit to Firebase or fallback
@@ -236,6 +265,7 @@ const ReactRecruitmentForm = () => {
             }
             
             setSubmitStatus('success');
+            setErrorMessage(''); // Clear any previous error messages
             setFormData({
                 firstName: '',
                 lastName: '',
@@ -254,6 +284,13 @@ const ReactRecruitmentForm = () => {
         } catch (error) {
             console.error('Submission error:', error);
             setSubmitStatus('error');
+            if (error.code === 'permission-denied') {
+                setErrorMessage('Permission denied. Please check your internet connection and try again.');
+            } else if (error.code === 'unauthenticated') {
+                setErrorMessage('Authentication required. Please refresh the page and try again.');
+            } else {
+                setErrorMessage('Submission failed. Please try again.');
+            }
         } finally {
             setIsSubmitting(false);
         }
@@ -383,7 +420,7 @@ const ReactRecruitmentForm = () => {
                 key: 'status-message'
             }, submitStatus === 'success' ? 
                 'Thank you! We\'ll review your application soon.' : 
-                'Please try again later.')
+                errorMessage || 'Please try again later.')
         ])
     ]);
 };
