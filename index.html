@@ -1662,8 +1662,26 @@
                     currentUser: !!currentUser,
                     firebaseAuthUser: !!window.firebase.auth.currentUser,
                     authUser: !!authUser,
+                    authUserEmail: authUser?.email,
+                    authUserUID: authUser?.uid,
+                    authUserEmailVerified: authUser?.emailVerified,
                     userAgent: navigator.userAgent.includes('Mobile') ? 'Mobile' : 'Desktop'
                 });
+                
+                // Get and log the auth token for debugging mobile issues
+                try {
+                    if (authUser) {
+                        const token = await authUser.getIdTokenResult();
+                        console.log('Firebase Auth Token Claims:', {
+                            email: token.claims.email,
+                            email_verified: token.claims.email_verified,
+                            auth_time: token.claims.auth_time,
+                            provider: token.claims.firebase?.sign_in_provider
+                        });
+                    }
+                } catch (tokenError) {
+                    console.warn('Could not retrieve auth token for debugging:', tokenError);
+                }
                 
                 if (!authUser) {
                     console.warn('Authentication failed on form submission. User might need to sign in again.');
