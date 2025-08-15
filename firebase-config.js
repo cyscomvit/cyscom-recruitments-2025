@@ -10,11 +10,19 @@
   try {
     const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js');
     const { getFirestore, collection, addDoc, doc, updateDoc, setDoc, getDoc, getDocs, query, where, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js');
-    const { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js');
+    const { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js');
     
     const app = initializeApp(window.FIREBASE_ENV.config);
     const db = getFirestore(app);
     const auth = getAuth(app);
+    
+    // Set authentication persistence for mobile compatibility
+    try {
+      await setPersistence(auth, browserLocalPersistence);
+      console.log('✅ Firebase Auth persistence set to LOCAL');
+    } catch (persistenceError) {
+      console.warn('⚠️ Auth persistence setup failed:', persistenceError);
+    }
     
     window.firebase = { 
       app, 
@@ -33,8 +41,12 @@
 
       GoogleAuthProvider,
       signInWithPopup,
+      signInWithRedirect,
+      getRedirectResult,
       signOut,
       onAuthStateChanged,
+      setPersistence,
+      browserLocalPersistence,
 
       security: window.FIREBASE_ENV.security,
       environment: window.FIREBASE_ENV.environment
