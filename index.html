@@ -680,6 +680,15 @@
 
         // Smooth scrolling for navigation links
         document.addEventListener('DOMContentLoaded', function() {
+            // Enhanced mobile debugging
+            console.log('📄 Page loaded:', {
+                url: window.location.href,
+                referrer: document.referrer,
+                isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
+                hasURLParams: window.location.search.length > 0,
+                timestamp: new Date().toISOString()
+            });
+            
             // Mobile-specific network and auth monitoring
             if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
                 console.log('📱 Mobile device detected - Enabling enhanced authentication monitoring');
@@ -701,6 +710,14 @@
                         window.firebase.auth.currentUser.getIdToken(true).catch(error => {
                             console.warn('⚠️ Auth token refresh failed on visibility change:', error);
                         });
+                    }
+                });
+                
+                // Add specific logging for mobile redirect handling
+                window.addEventListener('load', function() {
+                    console.log('📱 Window load event - checking if this is a redirect return');
+                    if (document.referrer.includes('accounts.google.com')) {
+                        console.log('🔄 Detected return from Google authentication');
                     }
                 });
             }
@@ -1022,17 +1039,26 @@
             let isAuthChecking = true;
 
             // Initialize authentication when Firebase is loaded
-            window.addEventListener('firebaseLoaded', initializeAuth);
+            window.addEventListener('firebaseLoaded', function() {
+                console.log('🔥 Firebase loaded event received');
+                initializeAuth();
+                
+                // Additional check for mobile redirect scenarios
+                if (isMobileDevice() && document.referrer.includes('accounts.google.com')) {
+                    console.log('📱 Mobile redirect detected - additional auth check in 2 seconds');
+                    setTimeout(() => {
+                        console.log('🔍 Performing additional redirect result check...');
+                        checkRedirectResult();
+                    }, 2000);
+                }
+            });
 
             function initializeAuth() {
                 console.log('🔐 Initializing Firebase Authentication...');
                 
-                // Check for redirect result first (important for mobile)
-                checkRedirectResult();
-                
-                // Check authentication state - persist sessions across refreshes
+                // Set up auth state listener first
                 window.firebase.onAuthStateChanged(window.firebase.auth, (user) => {
-                    console.log('🔄 Auth state changed:', user ? 'Signed In' : 'Signed Out');
+                    console.log('🔄 Auth state changed:', user ? `Signed In: ${user.email}` : 'Signed Out');
                     currentUser = user;
                     isAuthChecking = false;
                     updateFormAccess(user);
@@ -1040,6 +1066,11 @@
 
                 // Setup auth event listeners
                 setupAuthEventListeners();
+                
+                // Check for redirect result after a small delay to ensure auth state is set up
+                setTimeout(() => {
+                    checkRedirectResult();
+                }, 100);
             }
 
             // Check for redirect result (essential for mobile authentication)
@@ -1047,26 +1078,31 @@
                 try {
                     console.log('🔍 Checking for redirect result...');
                     const result = await window.firebase.getRedirectResult(window.firebase.auth);
+                    
+                    console.log('📱 Redirect result received:', {
+                        hasResult: !!result,
+                        hasUser: !!(result && result.user),
+                        userEmail: result && result.user ? result.user.email : 'none',
+                        credential: result && result.credential ? 'present' : 'none'
+                    });
+                    
                     if (result && result.user) {
                         console.log('✅ Redirect sign-in successful:', result.user.email);
-                        const userEmail = result.user.email;
-                        
-                        // Check if email domain is allowed
-                        if (!userEmail.endsWith('@vitstudent.ac.in')) {
-                            console.warn('Unauthorized domain:', userEmail);
-                            await window.firebase.signOut(window.firebase.auth);
-                            showTemporaryMessage('Only VIT Student emails (@vitstudent.ac.in) are allowed to access this form.', 'error');
-                            return;
-                        }
-                        
-                        // Check for existing submission
-                        await checkExistingSubmission(userEmail);
-                        showTemporaryMessage('Successfully signed in!', 'success');
+                        await handleSignInResult(result);
+                    } else if (result === null) {
+                        console.log('ℹ️ No redirect result found (normal for direct page load)');
+                    } else {
+                        console.log('⚠️ Empty redirect result received');
                     }
                 } catch (error) {
-                    console.error('Redirect result error:', error);
-                    if (error.code && error.code !== 'auth/no-current-user') {
-                        showTemporaryMessage('Authentication failed. Please try again.', 'error');
+                    console.error('❌ Redirect result error:', error);
+                    if (error.code && error.code !== 'auth/no-current-user' && error.code !== 'auth/null-user') {
+                        console.error('🔴 Redirect authentication failed:', {
+                            code: error.code,
+                            message: error.message,
+                            isMobile: isMobileDevice()
+                        });
+                        showTemporaryMessage('Mobile authentication failed. Please try again.', 'error');
                     }
                 }
             }
@@ -1077,9 +1113,14 @@
                 const recruitmentFormContainer = document.getElementById('recruitment-form-container');
                 const formMessages = document.getElementById('form-messages');
 
+                // Add mobile debugging overlay for development
+                if (isMobileDevice()) {
+                    addMobileDebugInfo(user);
+                }
+
                 if (user) {
                     // User is signed in - show form, hide overlay and user info bar
-                    
+                    console.log('✅ User authenticated, showing form:', user.email);
                     authOverlay.style.display = 'none';
                     userInfoBar.style.display = 'none'; // Hide user info bar for main page
                     
@@ -1117,7 +1158,7 @@
                     addUserInfoSection(user);
                 } else {
                     // User is not signed in - hide form, show restriction notice
-                    
+                    console.log('❌ No authenticated user, hiding form');
                     userInfoBar.style.display = 'none';
                     recruitmentFormContainer.classList.add('form-restricted');
                     
@@ -1153,6 +1194,51 @@
                     // Add restriction notice if not already present
                     addFormRestrictionNotice();
                 }
+            }
+
+            // Add mobile debugging overlay (only for development)
+            function addMobileDebugInfo(user) {
+                let debugDiv = document.getElementById('mobile-debug-info');
+                if (!debugDiv) {
+                    debugDiv = document.createElement('div');
+                    debugDiv.id = 'mobile-debug-info';
+                    debugDiv.style.cssText = `
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        right: 0;
+                        background: rgba(0,0,0,0.8);
+                        color: white;
+                        padding: 10px;
+                        font-family: monospace;
+                        font-size: 12px;
+                        z-index: 9999;
+                        max-height: 150px;
+                        overflow-y: auto;
+                        border-bottom: 2px solid #007bff;
+                    `;
+                    document.body.appendChild(debugDiv);
+                }
+                
+                const authState = user ? 'AUTHENTICATED' : 'NOT_AUTHENTICATED';
+                const timestamp = new Date().toLocaleTimeString();
+                
+                debugDiv.innerHTML = `
+                    <div><strong>📱 MOBILE DEBUG - ${timestamp}</strong></div>
+                    <div>🔐 Auth State: ${authState}</div>
+                    <div>👤 User: ${user ? user.email : 'None'}</div>
+                    <div>🌐 URL: ${window.location.href}</div>
+                    <div>🔄 Referrer: ${document.referrer || 'Direct'}</div>
+                    <div>📱 Is Mobile: ${isMobileDevice()}</div>
+                    <div style="margin-top: 5px;">
+                        <button onclick="window.refreshAuthState()" style="background: #007bff; color: white; border: none; padding: 5px; border-radius: 3px; cursor: pointer;">
+                            Refresh Auth
+                        </button>
+                        <button onclick="document.getElementById('mobile-debug-info').remove()" style="background: #dc3545; color: white; border: none; padding: 5px; border-radius: 3px; cursor: pointer; margin-left: 5px;">
+                            Hide Debug
+                        </button>
+                    </div>
+                `;
             }
 
             function resetFormData() {
@@ -1287,12 +1373,20 @@
                     
                     const isMobile = isMobileDevice();
                     console.log('📱 Device type:', isMobile ? 'Mobile' : 'Desktop');
+                    console.log('🌐 Current URL:', window.location.href);
+                    console.log('🔐 Auth state before sign-in:', window.firebase.auth.currentUser ? 'Signed In' : 'Signed Out');
                     
                     if (isMobile) {
                         // Use redirect for mobile devices (more reliable)
                         console.log('📱 Using redirect sign-in for mobile device...');
+                        console.log('🚀 Initiating redirect to Google...');
+                        
+                        // Show loading message for mobile redirect
+                        showTemporaryMessage('Redirecting to Google Sign In...', 'info');
+                        
                         await window.firebase.signInWithRedirect(window.firebase.auth, provider);
-                        // Note: The result will be handled by checkRedirectResult() after page reload
+                        // Note: The page will reload and the result will be handled by checkRedirectResult()
+                        console.log('📱 Redirect initiated (page will reload)');
                         return;
                     } else {
                         // Use popup for desktop devices
@@ -1302,7 +1396,7 @@
                     }
                     
                 } catch (error) {
-                    console.error('Sign in error:', error);
+                    console.error('❌ Sign in error:', error);
                     await handleSignInError(error);
                 }
             }
@@ -1659,8 +1753,36 @@
                 }, 3000);
             }
 
+            // Manual auth state refresh for debugging
+            window.refreshAuthState = async function() {
+                console.log('🔄 Manual auth state refresh requested');
+                try {
+                    const user = window.firebase.auth.currentUser;
+                    console.log('👤 Current auth user:', user ? {
+                        uid: user.uid,
+                        email: user.email,
+                        emailVerified: user.emailVerified
+                    } : 'null');
+                    
+                    // Force trigger auth state change
+                    updateFormAccess(user);
+                    
+                    // Try to refresh token if user exists
+                    if (user) {
+                        const token = await user.getIdToken(true);
+                        console.log('🎫 Token refreshed successfully');
+                    }
+                    
+                    // Try checking redirect result again
+                    await checkRedirectResult();
+                } catch (error) {
+                    console.error('❌ Manual auth refresh failed:', error);
+                }
+            };
+
             // Initialize auth when Firebase is ready
             if (window.firebaseLoaded) {
+                console.log('🔥 Firebase already loaded, initializing auth immediately');
                 initializeAuth();
             }
 
