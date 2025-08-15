@@ -155,11 +155,13 @@ function AnimatedDepartmentSelector() {
                     primary: department,
                     secondary: prev.primary
                 }));
+                    setSelectionMode('secondary');
             } else {
                 setSelectedDepartments(prev => ({
                     ...prev,
                     primary: department
                 }));
+                    setSelectionMode('secondary');
             }
         } else {
             // Secondary selection mode
