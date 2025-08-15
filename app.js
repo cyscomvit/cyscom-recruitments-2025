@@ -5,7 +5,16 @@ function locomotiveAnimations() {
 
 const locoScroll = new LocomotiveScroll({
   el: document.querySelector("#main"),
-  smooth: true
+  smooth: true,
+  multiplier: 1,
+  lerp: 0.05,
+  scrollFromAnywhere: true,
+  smartphone: {
+    smooth: true
+  },
+  tablet: {
+    smooth: true
+  }
 });
 
 // Make locomotive scroll instance globally available for navbar behavior

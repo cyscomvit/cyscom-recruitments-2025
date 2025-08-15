@@ -15,7 +15,7 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://www.gstatic.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://apis.google.com https://*.googleusercontent.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: https: https://*.googleusercontent.com https://*.googleapis.com; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://ipapi.co https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com; font-src 'self' https://cdn.jsdelivr.net; frame-src 'self' https://accounts.google.com https://*.firebaseapp.com; child-src 'self' https://accounts.google.com;">
     
     <title>Cyscom Recuitments 2025</title>
-    <link rel="shortcut icon" href="https://twogood.com.au/favicon-32x32.png" type="image/x-icon">
+    <link rel="shortcut icon" href="logo.png" type="image/x-icon">
     
     <!-- Preload Critical Resources for Better Performance -->
     
@@ -729,11 +729,16 @@
             function smoothScrollTo(targetId) {
                 const target = document.getElementById(targetId);
                 if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start',
-                        inline: 'nearest'
-                    });
+                    if (window.locoScroll) {
+                        // Use Locomotive scroll for smooth scrolling while maintaining full scrollability
+                        window.locoScroll.scrollTo(target);
+                    } else {
+                        // Fallback to regular scrollIntoView
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            inline: 'nearest'
+                        });
+                    }
                 }
             }
 
@@ -1074,6 +1079,11 @@
                         recruitmentFormContainer.style.transition = 'all 0.5s ease';
                         recruitmentFormContainer.style.opacity = '1';
                         recruitmentFormContainer.style.transform = 'translateY(0)';
+                        
+                        // Update scrolling after form appears
+                        if (window.updatePageScroll) {
+                            setTimeout(window.updatePageScroll, 300);
+                        }
                     }, 100);
                     
                     // Auto-fill and make email field immutable
@@ -1127,6 +1137,11 @@
                     
                     // Add restriction notice if not already present
                     addFormRestrictionNotice();
+                    
+                    // Update scrolling after form is hidden
+                    if (window.updatePageScroll) {
+                        setTimeout(window.updatePageScroll, 300);
+                    }
                 }
             }
 
@@ -2104,5 +2119,8 @@
     
     <!-- Tilted Card Effect -->
     <script src="tilted-card.js"></script>
+    
+    <!-- Scroll Restriction Fix -->
+    <script src="scroll-restriction.js"></script>
 </body>
 </html>
