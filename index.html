@@ -1000,34 +1000,7 @@
             window.addEventListener('firebaseLoaded', initializeAuth);
 
             function initializeAuth() {
-                // Handle redirect result for mobile authentication
-                if (isMobileDevice()) {
-                    window.firebase.getRedirectResult(window.firebase.auth)
-                        .then(async (result) => {
-                            if (result.user) {
-                                console.log('Redirect authentication successful');
-                                const userEmail = result.user.email;
-                                
-                                // Check if email domain is allowed
-                                if (!userEmail.endsWith('@vitstudent.ac.in')) {
-                                    console.warn('Unauthorized domain:', userEmail);
-                                    await window.firebase.signOut(window.firebase.auth);
-                                    showTemporaryMessage('Only VIT Student emails (@vitstudent.ac.in) are allowed to access this form.', 'error');
-                                    return;
-                                }
-                                
-                                // Check for existing submission
-                                await checkExistingSubmission(userEmail);
-                                showTemporaryMessage('Successfully signed in!', 'success');
-                            }
-                        })
-                        .catch((error) => {
-                            console.error('Redirect result error:', error);
-                            if (error.code !== 'auth/no-current-user') {
-                                showTemporaryMessage('Authentication failed. Please try again.', 'error');
-                            }
-                        });
-                }
+                
                 
                 // Check authentication state - persist sessions across refreshes
                 window.firebase.onAuthStateChanged(window.firebase.auth, (user) => {
@@ -1240,50 +1213,21 @@
                 }
             }
 
-            // Function to detect mobile devices
-            function isMobileDevice() {
-                return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-                       (window.innerWidth <= 768 && 'ontouchstart' in window);
-            }
-
             async function signInWithGoogle() {
                 try {
+                    
                     const provider = new window.firebase.GoogleAuthProvider();
                     provider.setCustomParameters({
                         prompt: 'select_account'
                     });
                     
-                    let result;
-                    let userEmail;
+                    const result = await window.firebase.signInWithPopup(window.firebase.auth, provider);
+                    const userEmail = result.user.email;
                     
-                    // Use redirect for mobile devices, popup for desktop
-                    if (isMobileDevice()) {
-                        console.log('Mobile device detected, using redirect authentication');
-                        
-                        // Check if we're returning from a redirect
-                        const redirectResult = await window.firebase.getRedirectResult(window.firebase.auth);
-                        
-                        if (redirectResult.user) {
-                            // User just returned from redirect
-                            result = redirectResult;
-                            userEmail = result.user.email;
-                            console.log('Authentication completed via redirect');
-                        } else {
-                            // Start the redirect process
-                            console.log('Starting redirect authentication...');
-                            showTemporaryMessage('Redirecting to Google Sign-in...', 'info');
-                            await window.firebase.signInWithRedirect(window.firebase.auth, provider);
-                            return; // Function will be called again after redirect
-                        }
-                    } else {
-                        // Desktop - use popup
-                        console.log('Desktop device detected, using popup authentication');
-                        result = await window.firebase.signInWithPopup(window.firebase.auth, provider);
-                        userEmail = result.user.email;
-                    }
                     
                     // Generate and log the document ID that will be used
                     const expectedDocId = hashEmail(userEmail);
+                    
                     
                     // Check if email domain is allowed
                     if (!userEmail.endsWith('@vitstudent.ac.in')) {
@@ -1307,10 +1251,6 @@
                         errorMessage = 'Sign in was cancelled. Please try again.';
                     } else if (error.code === 'auth/popup-blocked') {
                         errorMessage = 'Popup was blocked. Please allow popups and try again.';
-                    } else if (error.code === 'auth/cancelled-popup-request') {
-                        errorMessage = 'Another sign-in process is already in progress.';
-                    } else if (error.code === 'auth/operation-not-allowed') {
-                        errorMessage = 'Google sign-in is not enabled. Please contact support.';
                     }
                     
                     showTemporaryMessage(errorMessage, 'error');
