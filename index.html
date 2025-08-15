@@ -520,8 +520,8 @@
 
                         <!-- Department Selection -->
                         <div class="form-section">
-                            <h4>Choose Your Departments</h4>
-                            <p style="color: #666; font-size: 0.9rem; margin-bottom: 20px;">Select your 1st and 2nd preference departments.</p>
+                            <h4>Choose Your Departments <span class="required">*</span></h4>
+                            <p style="color: #666; font-size: 0.9rem; margin-bottom: 20px;">Select your 1st and 2nd preference departments. </p>
                             <div id="animated-department-selector"></div>
                             <!-- Hidden inputs to store selected departments -->
                             <input type="hidden" id="department-primary" name="departmentPrimary" required>
@@ -546,7 +546,7 @@
                             </div>
                             
                             <div class="form-group">
-                                <label for="contribution">Explain “cybersecurity” to your non-tech friend without using the words “hacking” or “internet.”<span class="required">*</span></label>
+                                <label for="contribution">Explain “cybersecurity” to your non-tech friend without using the words “hacking” or “internet. ”<span class="required">*</span></label>
                                 <textarea id="contribution" name="contribution" placeholder="Show your creativity..." required></textarea>
                             </div>
                         </div>
@@ -1853,6 +1853,27 @@
                     // Basic form validation
                     const validationErrors = performBasicValidation(applicationData);
                     if (validationErrors.length > 0) {
+                        // Special handling for department validation errors
+                        const departmentErrors = validationErrors.filter(error => 
+                            error.includes('department') || error.includes('preference') || error.includes('different')
+                        );
+                        
+                        if (departmentErrors.length > 0) {
+                            // Highlight the department section with CSS class
+                            const deptSection = document.getElementById('animated-department-selector');
+                            if (deptSection) {
+                                deptSection.classList.add('validation-error');
+                                
+                                // Remove highlight after 6 seconds
+                                setTimeout(() => {
+                                    deptSection.classList.remove('validation-error');
+                                }, 6000);
+                            }
+                            
+                            // Scroll to department section
+                            deptSection?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                        
                         showError(validationErrors.join('<br>'));
                         return;
                     }
@@ -2031,7 +2052,8 @@
                     email: 'Email',
                     phone: 'Phone Number',
                     regNumber: 'Registration Number',
-                    departmentPrimary: 'Primary Department',
+                    departmentPrimary: 'Primary Department (1st Preference)',
+                    departmentSecondary: 'Secondary Department (2nd Preference)',
                     skills: 'Skills',
                     motivation: 'Motivation',
                     contribution: 'Creativity'
@@ -2042,6 +2064,23 @@
                     if (!applicationData[fieldName] || applicationData[fieldName].trim() === '') {
                         errors.push(`${displayName} is required`);
                     }
+                }
+
+                // Specific department validation
+                const primaryDept = applicationData.departmentPrimary?.trim();
+                const secondaryDept = applicationData.departmentSecondary?.trim();
+                
+                if (!primaryDept) {
+                    errors.push('Please select your 1st preference department');
+                }
+                
+                if (!secondaryDept) {
+                    errors.push('Please select your 2nd preference department');
+                }
+                
+                // Ensure different departments are selected
+                if (primaryDept && secondaryDept && primaryDept === secondaryDept) {
+                    errors.push('Primary and Secondary departments must be different');
                 }
 
                 // Basic email validation

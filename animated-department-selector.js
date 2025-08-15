@@ -1,9 +1,6 @@
-// Animated Department Selector with Scroll-Linked Animation
-// Using React with CSS animations for better compatibility
 
 const { useState, useEffect, useRef } = React;
 
-// Department data with colors and descriptions
 const departments = [
     {
         id: 'technical',
@@ -63,9 +60,9 @@ function AnimatedDepartmentSelector() {
     });
     const [scrollProgress, setScrollProgress] = useState(0);
     const [currentIndex, setCurrentIndex] = useState(0);
-    const [selectionMode, setSelectionMode] = useState('primary'); // 'primary' or 'secondary'
+    const [selectionMode, setSelectionMode] = useState('primary'); 
+    const [isTransitioning, setIsTransitioning] = useState(false); 
 
-    // Update hidden inputs when departments are selected
     useEffect(() => {
         const primaryInput = document.getElementById('department-primary');
         const secondaryInput = document.getElementById('department-secondary');
@@ -91,6 +88,7 @@ function AnimatedDepartmentSelector() {
                 secondary: null
             });
             setSelectionMode('primary');
+            setIsTransitioning(false);
         };
 
         const handleUpdateDepartmentSelection = (event) => {
@@ -155,14 +153,20 @@ function AnimatedDepartmentSelector() {
                     primary: department,
                     secondary: prev.primary
                 }));
-                    setSelectionMode('secondary');
             } else {
                 setSelectedDepartments(prev => ({
                     ...prev,
                     primary: department
                 }));
-                    setSelectionMode('secondary');
             }
+            
+            // Auto-switch to secondary mode with visual feedback
+            setIsTransitioning(true);
+            setTimeout(() => {
+                setSelectionMode('secondary');
+                setIsTransitioning(false);
+            }, 100); // Fast transition for better UX
+            
         } else {
             // Secondary selection mode
             // Don't allow same department for both preferences
@@ -374,11 +378,15 @@ function AnimatedDepartmentSelector() {
             React.createElement('p', {
                 key: 'instruction',
                 style: {
-                    color: '#666',
+                    color: isTransitioning ? '#667eea' : '#666',
                     fontSize: '1rem',
-                    margin: '0'
+                    margin: '0',
+                    transition: 'color 0.3s ease',
+                    fontWeight: isTransitioning ? 'bold' : 'normal'
                 }
-            }, `Select your ${selectionMode === 'primary' ? '1st' : '2nd'} preference by clicking a department below`)
+            }, isTransitioning 
+                ? 'Great! Now select your 2nd preference...' 
+                : `Select your ${selectionMode === 'primary' ? '1st' : '2nd'} preference by clicking a department below`)
         ),
 
         // Scrollable department list
