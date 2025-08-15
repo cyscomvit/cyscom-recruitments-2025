@@ -17,10 +17,8 @@
 
 html, body {
     height: 100%;
-    min-height: 100vh;
     width: 100%;
     overflow-x: hidden; /* Prevent horizontal scroll */
-    overflow-y: auto;
 }
 
 *::selection {
@@ -477,12 +475,6 @@ textarea:hover ~ #cursor {
     padding: 2.5rem;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.0);
     transition: all 0.5s ease;
-    min-height: 80vh;
-    height: auto;
-    overflow: visible;
-    display: block;
-    opacity: 1;
-    transform: translateY(0);
 }
 
 /* Form Sections */
@@ -934,7 +926,7 @@ textarea:hover ~ #cursor {
 
 #footer #connect a, #nitty a{
     font-size: 17px;
-    color: #ffffff;
+    color: #000;
     text-decoration: none;
     font-weight: 500;
     color: white;
@@ -2674,7 +2666,7 @@ textarea:hover ~ #cursor {
     #footer #logo #copyright a{
         padding: 0 15px;
         text-decoration: none;
-        color: #ffffff;
+        color: #000;
         opacity: 0.5;
         text-align: center;
     }
@@ -3481,8 +3473,6 @@ textarea:hover ~ #cursor {
 /* Form Access Restriction */
 .form-restricted {
     display: none !important;
-    opacity: 0 !important;
-    height: 0 !important;
     transition: all 0.3s ease;
 }
 
