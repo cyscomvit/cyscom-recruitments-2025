@@ -1,32 +1,21 @@
-// Firebase Configuration and Security Module
-// This file initializes Firebase using environment configuration
 
-// Firebase Configuration (using CDN approach for compatibility)
 (async function() {
-  console.log('🔥 Starting Firebase configuration...');
   
-  // Wait for environment configuration to load
+
   if (typeof window.FIREBASE_ENV === 'undefined') {
-    console.error('❌ Firebase environment configuration not found. Please load firebase-env.js first.');
+    console.error('Environment configuration not found.');
     return;
   }
-  
-  console.log('✅ Firebase environment found:', window.FIREBASE_ENV);
 
   try {
-    console.log('📦 Loading Firebase modules...');
     const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js');
     const { getFirestore, collection, addDoc, doc, updateDoc, setDoc, getDoc, getDocs, query, where, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js');
     const { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js');
     
-    console.log('🚀 Initializing Firebase app...');
-    // Initialize Firebase with environment configuration
     const app = initializeApp(window.FIREBASE_ENV.config);
     const db = getFirestore(app);
     const auth = getAuth(app);
     
-    console.log('🔗 Setting up global Firebase object...');
-    // Make Firebase available globally (only the necessary parts)
     window.firebase = { 
       app, 
       db, 
@@ -41,39 +30,29 @@
       query,
       where,
       serverTimestamp,
-      // Auth functions
+
       GoogleAuthProvider,
       signInWithPopup,
       signOut,
       onAuthStateChanged,
-      // Include security settings
+
       security: window.FIREBASE_ENV.security,
       environment: window.FIREBASE_ENV.environment
     };
     
-    // Set a flag that Firebase is loaded
+
     window.firebaseLoaded = true;
     
-    console.log('✅ Firebase initialized successfully from firebase-config.js');
-    console.log('🔒 Security settings:', window.FIREBASE_ENV.security);
-    console.log('🌍 Environment:', window.FIREBASE_ENV.environment);
-    console.log('📊 Firebase object:', window.firebase);
-    
-    // Dispatch a custom event to notify other scripts
+
     window.dispatchEvent(new CustomEvent('firebaseLoaded'));
     
   } catch (error) {
-    console.error('❌ Firebase initialization failed:', error);
-    console.error('Error details:', {
-      name: error.name,
-      message: error.message,
-      stack: error.stack
-    });
+    console.error('initialization failed:', error);
     window.firebaseLoaded = false;
   }
 })();
 
-// Security rules for form validation (make available globally)
+
 window.validationRules = {
   firstName: {
     minLength: 2,
@@ -117,7 +96,7 @@ window.validationRules = {
   }
 };
 
-// Sanitization utilities (make available globally)
+
 window.sanitize = {
   // Remove HTML tags and escape special characters
   html: (str) => {
@@ -242,7 +221,8 @@ window.errorMessages = {
     regNumber: 'Please enter a valid VIT registration number (e.g., 22BCE1234)',
     department: 'Please select a department',
     skills: 'Please describe your skills (10-1000 characters)',
-    motivation: 'Please explain your motivation (20-2000 characters)'
+    motivation: 'Please explain your motivation (20-2000 characters)',
+    contribution: 'Use your creativity'
   },
   security: {
     rateLimited: 'Too many submission attempts. Please wait before trying again.',

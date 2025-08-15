@@ -852,6 +852,49 @@ textarea:hover ~ #cursor {
     .bottom-spacer {
         height: 3vh;
     }
+
+    /* Extra small screen slider optimizations */
+    #page2 {
+        min-height: 60vh; /* Even smaller for very small screens */
+        padding: 1vw 2vw; /* Further reduced padding */
+    }
+
+    #slider-container {
+        height: 40vh; /* Smaller container */
+        max-width: 100%; /* Use full width on very small screens */
+    }
+
+    #page2 .elem {
+        height: 40vh; /* Even smaller elements */
+        width: 220px; /* Smaller width */
+        min-width: 220px;
+        margin: 0 5px; /* Tighter margins */
+        border-radius: 10px;
+    }
+
+    /* Even more compact department info cards */
+    #page2 .elem .dets .dets-info {
+        width: 200px;
+        height: 35px;
+        padding: 0 15px;
+        font-size: 11px;
+    }
+
+    #page2 .elem .dets .dets-info p {
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+    #page2 .elem .dets .container {
+        width: 200px;
+        font-size: 11px;
+    }
+
+    .container .listing .list-elem p {
+        font-size: 12px;
+        margin: 6px 6px;
+        line-height: 1.3;
+    }
 }
 
 #page5 {
@@ -1082,18 +1125,19 @@ textarea:hover ~ #cursor {
     }
 
     #page2 {
-        min-height: 100vh;
+        min-height: 70vh; /* Reduced from 100vh */
         width: 100%;
         position: relative;
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 5vw 3vw;
+        padding: 2vw 3vw; /* Reduced top/bottom padding from 5vw to 2vw */
     }
 
     #slider-container {
         width: 100%;
         max-width: 400px; /* Adjusted for mobile */
+        height: 45vh; /* Reduced height for mobile */
     }
 
     #slider-wrapper {
@@ -1103,11 +1147,12 @@ textarea:hover ~ #cursor {
     }
 
     #page2 .elem {
-        height: 60vh;
-        width: 300px;
-        min-width: 300px;
-        margin: 0 10px;
+        height: 45vh; /* Reduced from 60vh to 45vh */
+        width: 250px; /* Reduced from 300px to 250px */
+        min-width: 250px; /* Reduced from 300px to 250px */
+        margin: 0 8px; /* Reduced margin from 10px to 8px */
         scroll-snap-align: center;
+        border-radius: 12px; /* Slightly smaller border radius */
     }
 
     .slider-nav {
@@ -1125,6 +1170,29 @@ textarea:hover ~ #cursor {
 
     #next-btn {
         right: -25px; /* Back to original mobile positioning */
+    }
+
+    /* Mobile-specific department card styling */
+    #page2 .elem .dets .dets-info {
+        width: 240px; /* Smaller width for mobile */
+        height: 40px; /* Smaller height */
+        padding: 0 20px; /* Reduced padding */
+        font-size: 12px; /* Smaller font size */
+    }
+
+    #page2 .elem .dets .container {
+        width: 240px; /* Match the dets-info width */
+        font-size: 12px; /* Smaller font size */
+    }
+
+    .container .listing .list-elem p {
+        font-size: 13px; /* Smaller font size for mobile */
+        margin: 8px 8px; /* Reduced margins */
+        line-height: 1.4; /* Better line spacing */
+    }
+
+    #page2 .elem img {
+        scale: 1.05; /* Slightly less scale on mobile */
     }
 
     #moto {
@@ -1152,18 +1220,20 @@ textarea:hover ~ #cursor {
     }
 
     #page3 {
-        min-height: 66vh;
+        min-height: 80vh;
         width: 100%;
         position: relative;
         display: flex;
         align-items: center;
-        justify-content: space-evenly;
+        justify-content: center;
         flex-wrap: wrap;
+        gap: 15px;
+        padding: 20px 10px;
     }
 
     .child {
-        height: 20vh;
-        width: 38vw;
+        height: 18vh;
+        width: 45vw;
         /* background-color: red; */
         /* border: 2px solid black; */
         position: relative;
@@ -1171,6 +1241,7 @@ textarea:hover ~ #cursor {
         flex-direction: column;
         align-items: center;
         justify-content: center;
+        margin: 25px;
     }
 
     .child img {
@@ -3116,6 +3187,37 @@ textarea:hover ~ #cursor {
         width: 50px;
         height: 50px;
         font-size: 18px;
+    }
+    
+    /* Page3 optimizations for very small screens */
+    #page3 {
+        min-height: 90vh;
+        padding: 15px 5px;
+        gap: 12px;
+    }
+    
+    .child {
+        height: 16vh;
+        width: 47vw;
+        margin: 3px;
+    }
+    
+    .child img {
+        height: 90%;
+        width: auto;
+        object-fit: contain;
+    }
+    
+    .child .childInfo {
+        gap: 3px;
+        margin-top: 5px;
+    }
+    
+    .child .childInfo p {
+        font-size: 11px;
+        text-align: center;
+        line-height: 1.2;
+        margin: 2px 0;
     }
 }
 

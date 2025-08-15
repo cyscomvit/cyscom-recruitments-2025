@@ -16,10 +16,79 @@
     
     <title>Cyscom Recuitments 2025</title>
     <link rel="shortcut icon" href="https://twogood.com.au/favicon-32x32.png" type="image/x-icon">
+    
+    <!-- Preload Critical Resources for Better Performance -->
+    
+    <!-- 1. Preload Critical Stylesheets -->
+    <link rel="preload" href="style.css" as="style">
+    <!-- <link rel="preload" href="Particles.css" as="style"> -->
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" as="style">
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/locomotive-scroll@3.5.4/dist/locomotive-scroll.css" as="style">
+    
+    <!-- 2. Preload Critical Fonts -->
+    <link rel="preload" href="./Futura-Bold.ttf" as="font" type="font/ttf" crossorigin>
+    <link rel="preload" href="./HelveticaNowText-Regular.ttf" as="font" type="font/ttf" crossorigin>
+    
+    <!-- 3. Preload Background Image (Critical for First Paint) -->
+    <link rel="preload" href="Images/Background.png" as="image">
+    
+    <!-- 4. Preload Logo (Above the fold) -->
+    <link rel="preload" href="Images/logo.png" as="image">
+    
+    <!-- 5. Preload Video (Hero section) -->
+    <!-- <link rel="preload" href="./video.mp4" as="video" type="video/mp4"> -->
+    
+    <!-- 6. Preload Department Images (Page 2 slider) -->
+    <link rel="preload" href="Images/Tech.png" as="image">
+    <link rel="preload" href="Images/Design.png" as="image">
+    <link rel="preload" href="Images/dEV.png" as="image">
+    <link rel="preload" href="Images/SM.png" as="image">
+    <link rel="preload" href="Images/Content.png" as="image">
+    <link rel="preload" href="Images/EM.png" as="image">
+    
+    <!-- 7. Preload Event Images (Page 3) -->
+    <link rel="preload" href="Images/Eve1.png" as="image">
+    <link rel="preload" href="Images/Eve2.png" as="image">
+    <link rel="preload" href="Images/Eve3.png" as="image">
+    <link rel="preload" href="Images/Eve4.png" as="image">
+    
+    <!-- 8. Preload Critical JavaScript Libraries -->
+    <link rel="preload" href="https://unpkg.com/react@18/umd/react.production.min.js" as="script">
+    <link rel="preload" href="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" as="script">
+    <link rel="preload" href="https://unpkg.com/@babel/standalone/babel.min.js" as="script">
+    
+    <!-- 9. Preload Critical Local Scripts -->
+    <link rel="preload" href="firebase-env.js" as="script">
+    <link rel="preload" href="firebase-config.js" as="script">
+    <link rel="preload" href="security-utils.js" as="script">
+    <link rel="preload" href="app.js" as="script">
+    
+    <!-- 10. Preload Animation Libraries -->
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/locomotive-scroll@3.5.4/dist/locomotive-scroll.js" as="script">
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" as="script">
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js" as="script">
+    
+    <!-- 11. Preload Additional Components -->
+    <link rel="preload" href="glitch-text-component.js" as="script">
+    <link rel="preload" href="tilted-card.js" as="script">
+    
+    <!-- Load Stylesheets (after preloading) -->
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="Particles.css">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/locomotive-scroll@3.5.4/dist/locomotive-scroll.css">
+    
+    <!-- DNS Prefetch for External Domains (Performance Optimization) -->
+    <link rel="dns-prefetch" href="//unpkg.com">
+    <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
+    <link rel="dns-prefetch" href="//cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="//www.gstatic.com">
+    <link rel="dns-prefetch" href="//apis.google.com">
+    <link rel="dns-prefetch" href="//accounts.google.com">
+    
+    <!-- Preconnect to Critical External Services -->
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://apis.google.com" crossorigin>
     
     <!-- React and Babel CDN -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -472,7 +541,7 @@
                             
                             <div class="form-group">
                                 <label for="contribution">Explain “cybersecurity” to your non-tech friend without using the words “hacking” or “internet.”<span class="required">*</span></label>
-                                <textarea id="contribution" name="contribution" placeholder="Describe how you can contribute to our community and what unique value you bring..." required></textarea>
+                                <textarea id="contribution" name="contribution" placeholder="Show your creativity..." required></textarea>
                             </div>
                         </div>
 
@@ -600,9 +669,9 @@
 
                 // Render to the particles container
                 ReactDOM.render(particlesElement, particlesContainer);
-                console.log('✅ Canvas particles background initialized successfully on top of background image');
+                
             } catch (error) {
-                console.error('❌ Error initializing particles:', error);
+                console.error('Error initializing particles:', error);
                 // Fallback: show a simple animated overlay
                 particlesContainer.style.background = 'radial-gradient(circle at 30% 20%, rgba(255,255,255,0.1) 0%, transparent 50%), radial-gradient(circle at 70% 80%, rgba(255,255,255,0.05) 0%, transparent 50%)';
                 particlesContainer.style.animation = 'pulse 4s ease-in-out infinite alternate';
@@ -1242,7 +1311,7 @@
                     }
                     
                 } catch (error) {
-                    console.error('❌ Error checking existing submission:', error);
+                    console.error('Error checking existing submission:', error);
                     // Don't block sign-in if checking fails
                 }
             }
@@ -1790,7 +1859,8 @@
                     regNumber: 'Registration Number',
                     departmentPrimary: 'Primary Department',
                     skills: 'Skills',
-                    motivation: 'Motivation'
+                    motivation: 'Motivation',
+                    contribution: 'Creativity'
                 };
 
                 // Check required fields
@@ -1813,8 +1883,12 @@
                     errors.push('Skills description should be at least 10 characters');
                 }
                 
-                if (applicationData.motivation && applicationData.motivation.trim().length < 20) {
-                    errors.push('Motivation should be at least 20 characters');
+                if (applicationData.motivation && applicationData.motivation.trim().length < 10) {
+                    errors.push('Motivation should be at least 10 characters');
+                }
+
+                if (applicationData.contribution && applicationData.contribution.trim().length < 2) {
+                    errors.push('Please describe cybersecurity in your own terms');
                 }
 
                 return errors;

@@ -402,7 +402,7 @@
     <script type="module">
       import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
       import { getFirestore, collection, getDocs, query, orderBy, doc, getDoc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
-      import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
+      import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
       
       const firebaseConfig = {
         apiKey: "AIzaSyDd4tqtajZcvTinZHUDXMWQIkBSeeO3lZ4",
@@ -418,6 +418,14 @@
       const db = getFirestore(app);
       const auth = getAuth(app);
       const provider = new GoogleAuthProvider();
+      
+      // Set persistence to LOCAL to maintain sessions across browser refreshes
+      await setPersistence(auth, browserLocalPersistence);
+      
+      // Force the auth to initialize immediately and check for existing sessions
+      auth.onAuthStateChanged((user) => {
+        console.log('Global auth state change detected:', user ? user.email : 'signed out');
+      });
 
       let ADMIN_EMAILS = [];
 
@@ -446,8 +454,19 @@
         collection, getDocs, query, orderBy, doc, getDoc, setDoc, serverTimestamp,
         loadAdminEmails,
         isAdmin: (email) => ADMIN_EMAILS.includes(email),
-        getAdminEmails: () => ADMIN_EMAILS
+        getAdminEmails: () => ADMIN_EMAILS,
+        authInitialized: false  // Flag to prevent multiple auth listeners
       };
+
+      // Initialize the dashboard after Firebase is ready
+      window.firebaseReady = true;
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+          window.adminDashboard = new AdminDashboard();
+        });
+      } else {
+        window.adminDashboard = new AdminDashboard();
+      }
       
       console.log('Firebase initialized');
     </script>
@@ -592,6 +611,13 @@
                 this.setupEventListeners();
                 this.setupTabCloseSignOut();
                 
+                // Wait for Firebase to be available
+                if (!window.firebase) {
+                    console.error('Firebase not available during init');
+                    this.showError('System error: Firebase not loaded. Please refresh the page.');
+                    return;
+                }
+                
                 // Load admin emails first, then check auth state
                 await this.loadAdminEmails();
                 this.checkAuthState();
@@ -599,12 +625,20 @@
 
             async loadAdminEmails() {
                 try {
+                    console.log('Loading admin emails...');
+                    
+                    if (!window.firebase) {
+                        throw new Error('Firebase not available');
+                    }
                     
                     await window.firebase.loadAdminEmails();
                     this.adminEmailsLoaded = true;
+                    console.log('Admin emails loaded successfully');
                     
                 } catch (error) {
                     console.error('Failed to load admin emails:', error);
+                    // Show error message to user
+                    this.showError('Failed to load admin configuration. Please check your internet connection and refresh the page.');
                     this.adminEmailsLoaded = true; // Continue with fallback emails
                 }
             }
@@ -687,6 +721,24 @@
             }
 
             checkAuthState() {
+                // Prevent setting up multiple auth listeners
+                if (window.firebase.authInitialized) {
+                    console.log('Auth already initialized, checking current state...');
+                    // Just check current user state without setting up new listener
+                    const currentUser = window.firebase.auth.currentUser;
+                    if (currentUser && window.firebase.isAdmin(currentUser.email)) {
+                        this.currentUser = currentUser;
+                        this.showDashboard();
+                        this.loadApplications();
+                    } else if (currentUser) {
+                        this.showError(`Access denied. ${currentUser.email} is not authorized for admin access.`);
+                        window.firebase.signOut(window.firebase.auth);
+                    } else {
+                        this.showLogin();
+                    }
+                    return;
+                }
+
                 // Wait for admin emails to load before checking auth
                 const checkAuth = () => {
                     if (!this.adminEmailsLoaded) {
@@ -694,15 +746,25 @@
                         return;
                     }
 
+                    // Mark auth as initialized to prevent multiple listeners
+                    window.firebase.authInitialized = true;
+
                     window.firebase.onAuthStateChanged(window.firebase.auth, (user) => {
+                        console.log('Auth state changed:', user ? user.email : 'signed out');
+                        
                         if (user && window.firebase.isAdmin(user.email)) {
+                            console.log('Admin user authenticated:', user.email);
                             this.currentUser = user;
                             this.showDashboard();
                             this.loadApplications();
                         } else if (user) {
+                            console.warn('Non-admin user attempted access:', user.email);
                             this.showError(`Access denied. ${user.email} is not authorized for admin access.`);
-                            window.firebase.signOut(window.firebase.auth);
+                            // Don't sign out immediately - let them try again
+                            // window.firebase.signOut(window.firebase.auth);
+                            this.showLogin();
                         } else {
+                            console.log('No user signed in, showing login');
                             this.showLogin();
                         }
                     });
@@ -723,32 +785,42 @@
                         await this.loadAdminEmails();
                     }
 
+                    console.log('Attempting Google sign-in...');
                     const result = await window.firebase.signInWithPopup(
                         window.firebase.auth, 
                         window.firebase.provider
                     );
                     
                     const user = result.user;
+                    console.log('Sign-in successful for:', user.email);
                     
+                    // Check admin status
                     if (!window.firebase.isAdmin(user.email)) {
+                        console.warn('User is not admin, signing out:', user.email);
                         await window.firebase.signOut(window.firebase.auth);
                         this.showError(`Access denied. ${user.email} is not authorized for admin access.`);
                         return;
                     }
 
+                    console.log('Admin access granted for:', user.email);
+                    // The onAuthStateChanged listener will handle the rest
+
                 } catch (error) {
                     console.error('Sign in error:', error);
+                    let errorMessage = 'Sign in failed. Please try again.';
                     
-                    if (error.code === 'auth/popup-blocked') {
-                        this.showError('Popup was blocked. Please allow popups and try again.');
-                    } else if (error.code === 'auth/popup-closed-by-user') {
-                        this.showError('Sign in was cancelled. Please try again.');
-                    } else {
-                        this.showError('Sign in failed. Please try again.');
+                    if (error.code === 'auth/popup-closed-by-user') {
+                        errorMessage = 'Sign in was cancelled.';
+                    } else if (error.code === 'auth/popup-blocked') {
+                        errorMessage = 'Pop-up was blocked. Please allow pop-ups for this site.';
+                    } else if (error.code === 'auth/cancelled-popup-request') {
+                        errorMessage = 'Another sign-in is in progress.';
                     }
+                    
+                    this.showError(errorMessage);
                 } finally {
                     this.googleSigninBtn.disabled = false;
-                    this.googleSigninBtn.textContent = '🔐 Sign in with Google';
+                    this.googleSigninBtn.textContent = '🔑 Sign in with Google';
                 }
             }
 
@@ -788,9 +860,22 @@
             async loadApplications() {
                 try {
                     console.log('Loading applications from Firebase...');
+                    console.log('Current user:', this.currentUser?.email);
+                    console.log('Auth token exists:', !!window.firebase.auth.currentUser);
+                    
                     const applicationsRef = window.firebase.collection(window.firebase.db, 'applications');
-                    const q = window.firebase.query(applicationsRef, window.firebase.orderBy('timestamp', 'desc'));
+                    // Try different field names for ordering (submissionTime is more common)
+                    let q;
+                    try {
+                        q = window.firebase.query(applicationsRef, window.firebase.orderBy('submissionTime', 'desc'));
+                    } catch {
+                        // Fallback to timestamp if submissionTime doesn't exist
+                        q = window.firebase.query(applicationsRef, window.firebase.orderBy('timestamp', 'desc'));
+                    }
+                    
+                    console.log('Executing Firestore query...');
                     const querySnapshot = await window.firebase.getDocs(q);
+                    console.log('Query completed, docs found:', querySnapshot.size);
                     
                     this.applications = [];
                     const applicationPromises = [];
@@ -1281,11 +1366,7 @@
             }
         }
 
-        // Initialize when DOM is loaded
-        document.addEventListener('DOMContentLoaded', () => {
-            // Create global instance for onclick handlers
-            window.adminDashboard = new AdminDashboard();
-        });
+        // AdminDashboard will be initialized by Firebase module when ready
     </script>
 </body>
 </html>

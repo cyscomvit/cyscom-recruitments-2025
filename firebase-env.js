@@ -24,16 +24,9 @@ window.FIREBASE_ENV = {
     logSecurityEvents: true
   },
   
-  // Environment settings
+
   environment: 'development', // 'development', 'staging', 'production'
   debug: true
 };
 
-// Security note for developers:
-// In a production environment, consider:
-// 1. Loading configuration from server-side environment variables
-// 2. Using Firebase Security Rules to restrict database access
-// 3. Implementing proper authentication for admin features
-// 4. Using HTTPS only
-// 5. Implementing proper CSP headers
-console.log('🔐 Firebase environment configuration loaded');
+
