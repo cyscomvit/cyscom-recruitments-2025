@@ -1004,14 +1004,46 @@
                 
                 // Check authentication state - persist sessions across refreshes
                 window.firebase.onAuthStateChanged(window.firebase.auth, (user) => {
+                    console.log('Auth state changed:', {
+                        user: !!user,
+                        email: user?.email,
+                        userAgent: navigator.userAgent.includes('Mobile') ? 'Mobile' : 'Desktop'
+                    });
                     
                     currentUser = user;
                     isAuthChecking = false;
                     updateFormAccess(user);
+                    
+                    // Ensure mobile devices have proper auth state
+                    if (user && navigator.userAgent.includes('Mobile')) {
+                        setTimeout(() => {
+                            if (!currentUser) {
+                                console.log('Mobile auth recovery: Re-setting currentUser');
+                                currentUser = window.firebase.auth.currentUser;
+                            }
+                        }, 1000);
+                    }
                 });
 
                 // Setup auth event listeners
                 setupAuthEventListeners();
+                
+                // Add a helper function for mobile compatibility
+                window.getCurrentAuthUser = function() {
+                    return currentUser || window.firebase.auth.currentUser;
+                };
+                
+                // Mobile-specific auth state monitoring
+                if (navigator.userAgent.includes('Mobile')) {
+                    setInterval(() => {
+                        const firebaseUser = window.firebase.auth.currentUser;
+                        if (firebaseUser && !currentUser) {
+                            console.log('Mobile auth recovery: Restoring currentUser from Firebase');
+                            currentUser = firebaseUser;
+                            updateFormAccess(firebaseUser);
+                        }
+                    }, 5000); // Check every 5 seconds
+                }
             }
 
             function updateFormAccess(user) {
@@ -1192,11 +1224,12 @@
                     });
                 }
 
-                // Intercept form interactions
+                // Intercept form interactions (with mobile auth compatibility)
                 const recruitmentFormContainer = document.getElementById('recruitment-form-container');
                 if (recruitmentFormContainer) {
                     recruitmentFormContainer.addEventListener('click', (e) => {
-                        if (!currentUser && !isAuthChecking) {
+                        const authUser = currentUser || window.firebase?.auth?.currentUser;
+                        if (!authUser && !isAuthChecking) {
                             e.preventDefault();
                             e.stopPropagation();
                             showAuthOverlay();
@@ -1204,7 +1237,8 @@
                     });
                     
                     recruitmentFormContainer.addEventListener('focusin', (e) => {
-                        if (!currentUser && !isAuthChecking) {
+                        const authUser = currentUser || window.firebase?.auth?.currentUser;
+                        if (!authUser && !isAuthChecking) {
                             e.preventDefault();
                             e.target.blur();
                             showAuthOverlay();
@@ -1601,11 +1635,47 @@
                     return false;
                 }
 
-                // Authentication check
-                if (!currentUser) {
-                    showError('Please sign in before submitting your application.');
+                // Enhanced authentication check for mobile compatibility
+                let authUser = currentUser || window.firebase.auth.currentUser;
+                
+                // Additional mobile auth check - try to refresh auth state
+                if (!authUser && navigator.userAgent.includes('Mobile')) {
+                    console.log('Mobile device detected with no auth user. Attempting auth refresh...');
+                    try {
+                        await new Promise((resolve) => {
+                            const unsubscribe = window.firebase.onAuthStateChanged(window.firebase.auth, (user) => {
+                                authUser = user;
+                                if (user) {
+                                    currentUser = user;
+                                }
+                                unsubscribe();
+                                resolve();
+                            });
+                        });
+                    } catch (error) {
+                        console.error('Auth refresh failed:', error);
+                    }
+                }
+                
+                // Debug logging for mobile issues
+                console.log('Form submission auth check:', {
+                    currentUser: !!currentUser,
+                    firebaseAuthUser: !!window.firebase.auth.currentUser,
+                    authUser: !!authUser,
+                    userAgent: navigator.userAgent.includes('Mobile') ? 'Mobile' : 'Desktop'
+                });
+                
+                if (!authUser) {
+                    console.warn('Authentication failed on form submission. User might need to sign in again.');
+                    showError('Authentication required. Please sign in and try again.');
                     showAuthOverlay();
                     return;
+                }
+                
+                // Update currentUser if it was null but Firebase has a user (mobile fix)
+                if (!currentUser && authUser) {
+                    currentUser = authUser;
+                    console.log('Mobile auth fix: Updated currentUser from Firebase auth state');
                 }
 
                 
@@ -1692,13 +1762,13 @@
                     applicationData.browserFingerprint = window.securityUtils.generateFingerprint();
                     applicationData.sessionToken = window.securityManager.sessionToken;
                     
-                    // Add authenticated user information
+                    // Add authenticated user information (using authUser for mobile compatibility)
                     applicationData.authenticatedUser = {
-                        uid: currentUser.uid,
-                        email: currentUser.email,
-                        displayName: currentUser.displayName,
-                        photoURL: currentUser.photoURL,
-                        emailVerified: currentUser.emailVerified,
+                        uid: authUser.uid,
+                        email: authUser.email,
+                        displayName: authUser.displayName,
+                        photoURL: authUser.photoURL,
+                        emailVerified: authUser.emailVerified,
                         authProvider: 'google.com',
                         signInTime: new Date().toISOString()
                     };

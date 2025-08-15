@@ -10,11 +10,19 @@
   try {
     const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js');
     const { getFirestore, collection, addDoc, doc, updateDoc, setDoc, getDoc, getDocs, query, where, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js');
-    const { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js');
+    const { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence } = await import('https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js');
     
     const app = initializeApp(window.FIREBASE_ENV.config);
     const db = getFirestore(app);
     const auth = getAuth(app);
+    
+    // Configure auth persistence for mobile compatibility
+    if (navigator.userAgent.includes('Mobile')) {
+      console.log('Configuring Firebase Auth persistence for mobile device');
+      setPersistence(auth, browserLocalPersistence).catch((error) => {
+        console.warn('Failed to set Firebase Auth persistence:', error);
+      });
+    }
     
     window.firebase = { 
       app, 
