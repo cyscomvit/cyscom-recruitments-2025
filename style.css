@@ -520,6 +520,20 @@ textarea:hover ~ #cursor {
     color: #ff4757;
 }
 
+/* Department validation error state */
+#animated-department-selector.validation-error {
+    border: 2px solid #dc3545 !important;
+    border-radius: 8px !important;
+    padding: 10px !important;
+    box-shadow: 0 0 10px rgba(220, 53, 69, 0.3) !important;
+    animation: departmentValidationPulse 2s ease-in-out infinite;
+}
+
+@keyframes departmentValidationPulse {
+    0%, 100% { box-shadow: 0 0 10px rgba(220, 53, 69, 0.3); }
+    50% { box-shadow: 0 0 15px rgba(220, 53, 69, 0.6); }
+}
+
 /* Form Inputs */
 .form-group input,
 .form-group select,
@@ -2666,7 +2680,7 @@ textarea:hover ~ #cursor {
     #footer #logo #copyright a{
         padding: 0 15px;
         text-decoration: none;
-        color: #000;
+        color: #ffffff;
         opacity: 0.5;
         text-align: center;
     }

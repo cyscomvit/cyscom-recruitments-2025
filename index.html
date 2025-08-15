@@ -815,11 +815,14 @@
             function smoothScrollTo(targetId) {
                 const target = document.getElementById(targetId);
                 if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start',
-                        inline: 'nearest'
-                    });
+                    if (window.locoScroll) {
+                        window.locoScroll.scrollTo(target);
+                    } else {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            inline: 'nearest'
+                        });
+                    }
                 }
             }
 
@@ -1160,6 +1163,9 @@
                         recruitmentFormContainer.style.transition = 'all 0.5s ease';
                         recruitmentFormContainer.style.opacity = '1';
                         recruitmentFormContainer.style.transform = 'translateY(0)';
+                         if (window.updatePageScroll) {
+                            setTimeout(window.updatePageScroll, 300);
+                        }
                     }, 100);
                     
                     // Auto-fill and make email field immutable
@@ -1213,6 +1219,9 @@
                     
                     // Add restriction notice if not already present
                     addFormRestrictionNotice();
+                    if (window.updatePageScroll) {
+                        setTimeout(window.updatePageScroll, 300);
+                    }
                 }
             }
 
@@ -2229,5 +2238,6 @@
     
     <!-- Tilted Card Effect -->
     <script src="tilted-card.js"></script>
+    <script src="scroll-restriction.js"></script>
 </body>
 </html>
