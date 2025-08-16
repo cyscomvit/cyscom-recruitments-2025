@@ -818,13 +818,28 @@
                 if (target) {
                     // Check if it's a mobile device
                     if (/Mobi|Android/i.test(navigator.userAgent)) {
-                        // On mobile, use native smooth scrolling
-                        const offset = target.offsetTop;
-                        console.debug('[smoothScrollTo] mobile path: scrolling to', offset);
-                        window.scrollTo({
-                            top: offset,
-                            behavior: 'smooth'
-                        });
+                        // On mobile, try a few methods to reliably scroll the page.
+                        // 1) Prefer element.scrollIntoView which is often more reliable on mobile
+                        // 2) Fall back to window.scrollTo using the element offsetTop adjusted for nav
+                        // 3) Finally assign document.documentElement / body scrollTop if needed
+                        console.debug('[smoothScrollTo] mobile path: attempting scrollIntoView for', targetId);
+                        try {
+                            target.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+                        } catch (err) {
+                            console.warn('[smoothScrollTo] scrollIntoView failed', err);
+                        }
+
+                        // Also attempt window.scrollTo with nav height compensation after a short delay
+                        setTimeout(() => {
+                            const nav = document.getElementById('nav');
+                            const navHeight = nav ? nav.offsetHeight : 0;
+                            const offset = Math.max(0, target.getBoundingClientRect().top + window.pageYOffset - navHeight - 8);
+                            console.debug('[smoothScrollTo] mobile fallback: window.scrollTo to', offset, 'navHeight=', navHeight);
+                            window.scrollTo({ top: offset, behavior: 'smooth' });
+
+                            // No hard post-check or forced assignment — allow native smooth scroll to proceed
+                        }, 60);
+
                         // Close mobile menu if it's open
                         const menu = document.querySelector('.nav-links');
                         if (menu && menu.classList.contains('active')) {
@@ -917,6 +932,22 @@
                     smoothScrollTo('page4');
                 }, { passive: false });
             }
+
+            // Diagnostic helper: log pageYOffset for a short period after nav taps to detect if something else later moves it
+            function logYOffsetFor(durationMs = 1000) {
+                const start = Date.now();
+                const id = setInterval(() => {
+                    console.debug('[diagnostic] pageYOffset=', window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop);
+                    if (Date.now() - start > durationMs) clearInterval(id);
+                }, 150);
+            }
+
+            // Attach diagnostic logger to nav clicks/touches to help debugging
+            [homeLink, aboutLink, registerLink, recruitmentLink].forEach(link => {
+                if (!link) return;
+                link.addEventListener('click', () => logYOffsetFor(1200));
+                link.addEventListener('touchstart', () => logYOffsetFor(1200), { passive: true });
+            });
 
             if (resultsLink) {
                 resultsLink.addEventListener('click', function(e) {
