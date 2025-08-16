@@ -815,9 +815,24 @@
             function smoothScrollTo(targetId) {
                 const target = document.getElementById(targetId);
                 if (target) {
-                    if (window.locoScroll) {
+                    // Check if it's a mobile device
+                    if (/Mobi|Android/i.test(navigator.userAgent)) {
+                        // On mobile, use native smooth scrolling
+                        const offset = target.offsetTop;
+                        window.scrollTo({
+                            top: offset,
+                            behavior: 'smooth'
+                        });
+                        // Close mobile menu if it's open
+                        const menu = document.querySelector('.nav-links');
+                        if (menu && menu.classList.contains('active')) {
+                            menu.classList.remove('active');
+                        }
+                    } else if (window.locoScroll) {
+                        // On desktop, use Locomotive Scroll
                         window.locoScroll.scrollTo(target);
                     } else {
+                        // Fallback
                         target.scrollIntoView({
                             behavior: 'smooth',
                             inline: 'nearest'
