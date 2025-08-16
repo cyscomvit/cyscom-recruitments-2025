@@ -1,11 +1,5 @@
-// Firebase Environment Configuration
-// This file should be excluded from version control in production
-// Use environment variables or secure configuration management in production
-
-// Production Firebase Configuration
-// Note: In production, consider using environment variables or a secure config service
+// Firebase Public Environment Configuration
 window.FIREBASE_ENV = {
-  // Firebase configuration
   config: {
     apiKey: "AIzaSyDd4tqtajZcvTinZHUDXMWQIkBSeeO3lZ4",
     authDomain: "cyscom-recruitment-portal.firebaseapp.com",
@@ -25,7 +19,7 @@ window.FIREBASE_ENV = {
   },
   
 
-  environment: 'development', // 'development', 'staging', 'production'
+  environment: 'development', 
   debug: true
 };
 
