@@ -891,6 +891,39 @@
                 });
             }
 
+            // Ensure mobile taps and pointer events trigger scrolling immediately.
+            // Some mobile browsers may not reliably fire 'click' when touch interactions
+            // are intercepted or when there are other touch handlers; attach
+            // pointerdown/touchstart as a robust fallback. A small debounce prevents
+            // double-invocation (touch -> click).
+            (function enableNavTouchFallback() {
+                const navEntries = [
+                    {el: homeLink, fn: () => scrollToTop()},
+                    {el: aboutLink, fn: () => smoothScrollTo('moto')},
+                    {el: registerLink, fn: () => smoothScrollTo('page2')},
+                    {el: recruitmentLink, fn: () => smoothScrollTo('page4')},
+                    {el: resultsLink, fn: () => smoothScrollTo('impact')}
+                ];
+
+                navEntries.forEach(entry => {
+                    const el = entry.el;
+                    if (!el) return;
+                    let last = 0;
+                    const handler = (e) => {
+                        // Only handle primary pointer/touches
+                        try { e.preventDefault(); } catch (err) {}
+                        const now = Date.now();
+                        if (now - last < 700) return; // debounce double events
+                        last = now;
+                        entry.fn();
+                    };
+
+                    // Use pointerdown when available; fall back to touchstart
+                    el.addEventListener('pointerdown', handler, { passive: false });
+                    el.addEventListener('touchstart', handler, { passive: false });
+                });
+            })();
+
             // Navbar scroll behavior - integrated with Locomotive Scroll
             let lastScrollTop = 0;
             let scrollDirection = 'up';
