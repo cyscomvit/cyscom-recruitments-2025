@@ -814,11 +814,13 @@
             // Add smooth scroll behavior
             function smoothScrollTo(targetId) {
                 const target = document.getElementById(targetId);
+                console.debug('[smoothScrollTo] called for', targetId, 'userAgent=', navigator.userAgent, 'hasLocomotive=', !!window.locoScroll);
                 if (target) {
                     // Check if it's a mobile device
                     if (/Mobi|Android/i.test(navigator.userAgent)) {
                         // On mobile, use native smooth scrolling
                         const offset = target.offsetTop;
+                        console.debug('[smoothScrollTo] mobile path: scrolling to', offset);
                         window.scrollTo({
                             top: offset,
                             behavior: 'smooth'
@@ -830,14 +832,18 @@
                         }
                     } else if (window.locoScroll) {
                         // On desktop, use Locomotive Scroll
+                        console.debug('[smoothScrollTo] using locomotive scroll');
                         window.locoScroll.scrollTo(target);
                     } else {
                         // Fallback
+                        console.debug('[smoothScrollTo] fallback: scrollIntoView');
                         target.scrollIntoView({
                             behavior: 'smooth',
                             inline: 'nearest'
                         });
                     }
+                } else {
+                    console.warn('[smoothScrollTo] target not found for', targetId);
                 }
             }
 
@@ -858,30 +864,58 @@
             // Add event listeners with null checks
             if (homeLink) {
                 homeLink.addEventListener('click', function(e) {
+                    console.debug('[nav] click on home-link', e.type, 'userAgent=', navigator.userAgent);
                     e.preventDefault();
                     scrollToTop();
                 });
+                // Touch fallback
+                homeLink.addEventListener('touchstart', function(e) {
+                    console.debug('[nav] touchstart on home-link', e.type, 'userAgent=', navigator.userAgent);
+                    e.preventDefault();
+                    scrollToTop();
+                }, { passive: false });
             }
 
             if (aboutLink) {
                 aboutLink.addEventListener('click', function(e) {
+                    console.debug('[nav] click on about-link', e.type, 'userAgent=', navigator.userAgent);
                     e.preventDefault();
                     smoothScrollTo('moto');
                 });
+                // Touch fallback
+                aboutLink.addEventListener('touchstart', function(e) {
+                    console.debug('[nav] touchstart on about-link', e.type, 'userAgent=', navigator.userAgent);
+                    e.preventDefault();
+                    smoothScrollTo('moto');
+                }, { passive: false });
             }
 
             if (registerLink) {
                 registerLink.addEventListener('click', function(e) {
+                    console.debug('[nav] click on register-link', e.type, 'userAgent=', navigator.userAgent);
                     e.preventDefault();
                     smoothScrollTo('page2');
                 });
+                // Touch fallback
+                registerLink.addEventListener('touchstart', function(e) {
+                    console.debug('[nav] touchstart on register-link', e.type, 'userAgent=', navigator.userAgent);
+                    e.preventDefault();
+                    smoothScrollTo('page2');
+                }, { passive: false });
             }
 
             if (recruitmentLink) {
                 recruitmentLink.addEventListener('click', function(e) {
+                    console.debug('[nav] click on recruitment-link', e.type, 'userAgent=', navigator.userAgent);
                     e.preventDefault();
                     smoothScrollTo('page4');
                 });
+                // Touch fallback
+                recruitmentLink.addEventListener('touchstart', function(e) {
+                    console.debug('[nav] touchstart on recruitment-link', e.type, 'userAgent=', navigator.userAgent);
+                    e.preventDefault();
+                    smoothScrollTo('page4');
+                }, { passive: false });
             }
 
             if (resultsLink) {
@@ -890,39 +924,6 @@
                     smoothScrollTo('impact');
                 });
             }
-
-            // Ensure mobile taps and pointer events trigger scrolling immediately.
-            // Some mobile browsers may not reliably fire 'click' when touch interactions
-            // are intercepted or when there are other touch handlers; attach
-            // pointerdown/touchstart as a robust fallback. A small debounce prevents
-            // double-invocation (touch -> click).
-            (function enableNavTouchFallback() {
-                const navEntries = [
-                    {el: homeLink, fn: () => scrollToTop()},
-                    {el: aboutLink, fn: () => smoothScrollTo('moto')},
-                    {el: registerLink, fn: () => smoothScrollTo('page2')},
-                    {el: recruitmentLink, fn: () => smoothScrollTo('page4')},
-                    {el: resultsLink, fn: () => smoothScrollTo('impact')}
-                ];
-
-                navEntries.forEach(entry => {
-                    const el = entry.el;
-                    if (!el) return;
-                    let last = 0;
-                    const handler = (e) => {
-                        // Only handle primary pointer/touches
-                        try { e.preventDefault(); } catch (err) {}
-                        const now = Date.now();
-                        if (now - last < 700) return; // debounce double events
-                        last = now;
-                        entry.fn();
-                    };
-
-                    // Use pointerdown when available; fall back to touchstart
-                    el.addEventListener('pointerdown', handler, { passive: false });
-                    el.addEventListener('touchstart', handler, { passive: false });
-                });
-            })();
 
             // Navbar scroll behavior - integrated with Locomotive Scroll
             let lastScrollTop = 0;
