@@ -399,30 +399,50 @@ textarea:hover ~ #cursor {
     /* background-color: red; */
     /* border: 2px solid black; */
     position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    display: block; /* let the image define the visual box */
+    overflow: hidden; /* prevent image from spilling out and overlapping other children */
 }
 
 .child img {
     height: 100%;
+    width: 100%;
+    object-fit: cover; /* crop/scale to fit the child box */
+    display: block;
 }
 
 .child .childInfo {
+    position: absolute; /* anchor the text to this child */
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 18px; /* sits over the bottom of the image */
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     gap: 5px;
+    z-index: 2; /* keep text above the image */
+    pointer-events: auto;
 }
 
 .child .childInfo a {
     text-decoration: none;
-    color: black;
+    color: #ffffff; /* lighter text for contrast over images */
     text-transform: uppercase;
     font-weight: 100;
     font-size: 14px;
+    /* Outline for better readability over varied image backgrounds */
+    -webkit-text-stroke: 0.9px rgba(0,0,0,0.85);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+}
+
+/* Ensure plain paragraph text inside childInfo also gets an outline on desktop */
+.child .childInfo p {
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 1rem;
+    margin: 0;
+    -webkit-text-stroke: 0.9px rgba(0,0,0,0.85);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
 }
 
 #page4 {
@@ -1251,32 +1271,43 @@ textarea:hover ~ #cursor {
         /* background-color: red; */
         /* border: 2px solid black; */
         position: relative;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
+    display: block;
+    overflow: hidden;
         margin: 25px;
     }
 
     .child img {
         height: 100%;
+    width: 100%;
+    object-fit: cover;
     }
 
     .child .childInfo {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        gap: 5px;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    z-index: 2;
     }
 
     .child .childInfo a {
         text-decoration: none;
-        color: black;
+        color: #000000;
         text-transform: uppercase;
         font-weight: 100;
         font-size: 14px;
         text-align: center;
+    }
+
+    /* mobile outline: keep consistent with desktop */
+    .child .childInfo a {
+        -webkit-text-stroke: 0.7px rgba(0,0,0,0.85);
+        text-shadow: 0 1px 2px rgba(0,0,0,0.8);
     }
 
     #page4 #recruitment-section {
@@ -3231,7 +3262,10 @@ textarea:hover ~ #cursor {
         font-size: 11px;
         text-align: center;
         line-height: 1.2;
-        margin: 2px 0;
+        margin: 2px 0px;
+        color: #ffffff;
+        -webkit-text-stroke: 0.6px rgba(0,0,0,0.85);
+        text-shadow: 0 1px 2px rgba(0,0,0,0.8);
     }
 }
 
@@ -3803,6 +3837,26 @@ textarea:hover ~ #cursor {
   left: -2px;
   text-shadow: var(--before-shadow, 5px 0 cyan);
   animation: animate-glitch var(--before-duration, 2s) infinite linear alternate-reverse;
+}
+
+/* Also trigger the glitch when the parent .child is hovered, or when a .hovered class
+     is present on the .child (used for touch devices / JS fallback). This mirrors the
+     behavior of .glitch.enable-on-hover:hover so images can trigger the text effect. */
+.child:hover .glitch.enable-on-hover::after,
+.child.hovered .glitch.enable-on-hover::after {
+    content: attr(data-text);
+    opacity: 1;
+    left: 2px;
+    text-shadow: var(--after-shadow, -5px 0 red);
+    animation: animate-glitch var(--after-duration, 3s) infinite linear alternate-reverse;
+}
+.child:hover .glitch.enable-on-hover::before,
+.child.hovered .glitch.enable-on-hover::before {
+    content: attr(data-text);
+    opacity: 1;
+    left: -2px;
+    text-shadow: var(--before-shadow, 5px 0 cyan);
+    animation: animate-glitch var(--before-duration, 2s) infinite linear alternate-reverse;
 }
 
 @keyframes animate-glitch {

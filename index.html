@@ -1096,6 +1096,42 @@
                 setTimeout(initializeSlider, 100);
             }
 
+            // --- Glitch: make image/parent hover also trigger text glitch ---
+            // This adds support for mouse hover and a JS touch fallback that toggles
+            // a `.hovered` class on `.child` so the CSS rules can trigger the
+            // `.glitch` pseudo-elements when the parent is hovered or tapped.
+            (function setupChildHoverFallback() {
+                const children = document.querySelectorAll('#page3 .child');
+                if (!children || children.length === 0) return;
+
+                children.forEach(child => {
+                    // Mouse support: add/remove hovered class on enter/leave
+                    child.addEventListener('mouseenter', () => child.classList.add('hovered'));
+                    child.addEventListener('mouseleave', () => child.classList.remove('hovered'));
+
+                    // Touch support: toggle on touchstart, remove on touchend or after a timeout
+                    let touchTimer = null;
+                    child.addEventListener('touchstart', (e) => {
+                        // Prevent interfering with scroll - only proceed for short taps
+                        child.classList.add('hovered');
+                        if (touchTimer) clearTimeout(touchTimer);
+                        touchTimer = setTimeout(() => {
+                            child.classList.remove('hovered');
+                            touchTimer = null;
+                        }, 1200); // keep hovered for 1.2s
+                    }, { passive: true });
+
+                    child.addEventListener('touchend', () => {
+                        if (touchTimer) {
+                            clearTimeout(touchTimer);
+                            touchTimer = null;
+                        }
+                        // remove hovered shortly after touchend to allow the effect to play
+                        setTimeout(() => child.classList.remove('hovered'), 300);
+                    }, { passive: true });
+                });
+            })();
+
             // Firebase Authentication for Form Access
             let currentUser = null;
             let isAuthChecking = true;
@@ -1631,7 +1667,6 @@
                 }
             }
 
-            // Keep local references for internal use
             function showAuthOverlay() {
                 window.showAuthOverlay();
             }
@@ -1643,12 +1678,15 @@
             function showTemporaryMessage(message, type) {
                 const messageDiv = document.createElement('div');
                 let backgroundColor;
+                let zIndex = 10001;
+
                 switch(type) {
                     case 'success':
                         backgroundColor = '#28a745';
                         break;
                     case 'info':
                         backgroundColor = '#3498db';
+                        zIndex = 20000; 
                         break;
                     case 'error':
                     default:
@@ -1664,7 +1702,7 @@
                     border-radius: 8px;
                     color: white;
                     font-weight: 500;
-                    z-index: 10001;
+                    z-index: ${zIndex};
                     animation: slideInRight 0.3s ease;
                     background: ${backgroundColor};
                     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
