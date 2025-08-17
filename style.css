@@ -479,6 +479,12 @@ textarea:hover ~ #cursor {
     color: #FFFFFF;
 }
 
+#recruitment-header h4 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    color: #f30202;
+}
+
 #recruitment-header p {
     font-size: 1.1rem;
     color: #B0B0B0;

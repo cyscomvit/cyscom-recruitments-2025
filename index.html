@@ -464,6 +464,7 @@
                 <div id="recruitment-header">
                     <h2>JOIN CYSCOM</h2>
                     <h3>Apply to Become Part of Our Cybersecurity Community</h3>
+                    <h4>FORM CLOSES ON 31st AUGUST, 2025</h4>
                     <p>Choose your department and submit your application to join CYSCOM's mission of spreading cybersecurity awareness.</p>
                 </div>
                 
@@ -546,7 +547,7 @@
                             </div>
                             
                             <div class="form-group">
-                                <label for="contribution">Explain “cybersecurity” to your non-tech friend without using the words “hacking” or “internet. ”<span class="required">*</span></label>
+                                <label for="contribution">Explain “cybersecurity” to your non-tech friend without using the words “hacking” or “internet.” <span class="required">*</span></label>
                                 <textarea id="contribution" name="contribution" placeholder="Show your creativity..." required></textarea>
                             </div>
                         </div>
@@ -567,7 +568,7 @@
                 <div id="form-messages" style="display: none;">
                     <div id="success-message" class="message success-msg" style="display: none;">
                         <h4>Application Submitted Successfully!</h4>
-                        <p>Thank you for your interest in CYSCOM. We'll review your application and get back to you soon.</p>
+                        <p>Thank you for your interest in CYSCOM. We'll review your application and get back to you soon. Join the below WhatsApp group for updates.</p>
                     </div>
                     
                     <div id="error-message" class="message error-msg" style="display: none;">
@@ -1561,6 +1562,10 @@
                             if (btnText) {
                                 btnText.textContent = 'Update Application';
                             }
+                        // Show persistent WhatsApp contact for users with existing submissions
+                        if (typeof window.showWhatsAppLink === 'function') {
+                            window.showWhatsAppLink({ docId });
+                        }
                         }
                     } else {
                         // New user - no existing submission
@@ -1716,6 +1721,8 @@
                     sessionStorage.removeItem('firebase-auth-user');
                     
                     showTemporaryMessage('Successfully signed out!', 'success');
+                    // Hide WhatsApp link on sign-out for privacy
+                    if (typeof window.hideWhatsAppLink === 'function') window.hideWhatsAppLink();
                     
                 } catch (error) {
                     console.error('Sign out error:', error);
@@ -2093,6 +2100,10 @@
                                     btnText.textContent = 'Update Application';
                                 }
                             }
+                            // Show persistent WhatsApp contact after successful submission/update
+                            if (typeof window.showWhatsAppLink === 'function') {
+                                window.showWhatsAppLink({ docId });
+                            }
                             
                             // Don't reset form - let user continue editing
                             
@@ -2331,6 +2342,64 @@
                     successMessage.style.display = 'none';
                 }, 7000);
             }
+
+            // --- WhatsApp link support for users who have submitted or updated ---
+            // Assumption: default contact number is set here; admins can override
+            // by setting window.WHATSAPP_NUMBER (international format without '+', e.g. '919876543210').
+            (function setupWhatsAppLink() {
+                // Default WhatsApp group invite link; override by setting window.WHATSAPP_GROUP_LINK
+                const DEFAULT_GROUP_LINK = 'https://chat.whatsapp.com/GEgOUx5s0t3AxYWTEItzEu?mode=ac_t';
+
+                function ensureElement() {
+                    if (document.getElementById('whatsapp-link-container')) return document.getElementById('whatsapp-link-container');
+
+                    const container = document.createElement('div');
+                    container.id = 'whatsapp-link-container';
+                    container.setAttribute('aria-hidden', 'false');
+                    // Minimal inline styling to keep it visible at the bottom of the recruitment section
+                    container.style.cssText = 'margin-top:16px; display:none; width:100%; text-align:center; position:relative; z-index:1000;';
+
+                    const link = document.createElement('a');
+                    link.id = 'whatsapp-link';
+                    link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
+                    link.style.cssText = 'display:inline-flex; align-items:center; gap:8px; background:#25D366; color:#ffffff; padding:10px 16px; border-radius:28px; text-decoration:none; font-weight:600; box-shadow:0 6px 18px rgba(37,211,102,0.18);';
+                    link.title = 'Results will be announced here';
+                    link.innerHTML = '<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/1022px-WhatsApp.svg.png" alt="WhatsApp" style="width:20px; height:20px; object-fit:contain;">JOIN FOR UPDATES';
+
+                    container.appendChild(link);
+
+                    // Place the container after the form messages (bottom of form area)
+                    const recruitmentSection = document.getElementById('recruitment-section');
+                    if (recruitmentSection) {
+                        recruitmentSection.appendChild(container);
+                    } else {
+                        document.body.appendChild(container);
+                    }
+
+                    return container;
+                }
+
+                window.showWhatsAppLink = function (opts = {}) {
+                    try {
+                        const container = ensureElement();
+                        const link = document.getElementById('whatsapp-link');
+                        if (!link) return;
+
+                        const groupLink = (window.WHATSAPP_GROUP_LINK && String(window.WHATSAPP_GROUP_LINK).trim()) || DEFAULT_GROUP_LINK;
+                        link.href = groupLink;
+
+                        container.style.display = 'block';
+                    } catch (err) {
+                        console.error('showWhatsAppLink error', err);
+                    }
+                };
+
+                window.hideWhatsAppLink = function () {
+                    const container = document.getElementById('whatsapp-link-container');
+                    if (container) container.style.display = 'none';
+                };
+            })();
 
             function showError(message) {
                 formMessages.style.display = 'block';
