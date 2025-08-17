@@ -1470,8 +1470,8 @@
                     const userEmail = result.user.email;
                     
                     
-                    // Generate and log the document ID that will be used
-                    const expectedDocId = hashEmail(userEmail);
+                    // Generate and log the document ID that will be used (deterministic SHA-256)
+                    const expectedDocId = await hashEmail(userEmail);
                     
                     
                     // Check if email domain is allowed
@@ -1502,17 +1502,29 @@
                 }
             }
 
-            // Simple hash function to create consistent document IDs from email
-            function hashEmail(email) {
-                let hash = 0;
-                if (email.length === 0) return hash.toString();
-                for (let i = 0; i < email.length; i++) {
-                    const char = email.charCodeAt(i);
-                    hash = ((hash << 5) - hash) + char;
-                    hash = hash & hash; // Convert to 32-bit integer
+            // Deterministic SHA-256 based ID derived from normalized email.
+            // Uses the Web Crypto API so collisions are extremely unlikely and the
+            // same email always produces the same ID. Returns a promise that
+            // resolves to a string like `user_<hex>`.
+            async function hashEmail(email) {
+                try {
+                    const normalized = String(email || '').trim().toLowerCase();
+                    if (normalized.length === 0) return 'user_0';
+                    const enc = new TextEncoder();
+                    const data = enc.encode(normalized);
+                    const hashBuffer = await (crypto.subtle || window.crypto.subtle).digest('SHA-256', data);
+                    const hashArray = Array.from(new Uint8Array(hashBuffer));
+                    const hex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                    return 'user_' + hex;
+                } catch (err) {
+                    // Fallback: deterministic simple hash if Web Crypto is not available
+                    let h = 0;
+                    for (let i = 0; i < email.length; i++) {
+                        h = ((h << 5) - h) + email.charCodeAt(i);
+                        h |= 0;
+                    }
+                    return 'user_' + Math.abs(h).toString();
                 }
-                // Make it positive and add prefix for better document ID
-                return 'user_' + Math.abs(hash).toString();
             }
 
             async function checkExistingSubmission(userEmail) {
@@ -1520,7 +1532,7 @@
                     
                     
                     // Generate consistent document ID from email hash
-                    const docId = hashEmail(userEmail);
+                    const docId = await hashEmail(userEmail);
                     
                     
                     // Store the document ID for later use
@@ -2031,7 +2043,7 @@
                     if (window.firebase && window.firebase.db) {
                         try {
                             // Use the consistent document ID based on user's email
-                            const docId = window.currentUserDocId || hashEmail(applicationData.email);
+                            const docId = window.currentUserDocId || await hashEmail(applicationData.email);
                             
                             
                             // Create document reference
