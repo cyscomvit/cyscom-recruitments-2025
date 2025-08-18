@@ -1208,7 +1208,7 @@
                 
                 
                 // Check authentication state - persist sessions across refreshes
-                window.firebase.onAuthStateChanged(window.firebase.auth, (user) => {
+                window.firebase.onAuthStateChanged(window.firebase.auth, async (user) => {
                     console.log('Auth state changed:', {
                         user: !!user,
                         email: user?.email,
@@ -1218,6 +1218,17 @@
                     currentUser = user;
                     isAuthChecking = false;
                     updateFormAccess(user);
+                    
+                    // If user is authenticated (including on page refresh), check for existing submission data
+                    if (user && user.email) {
+                        try {
+                            console.log('Checking for existing submission data on auth state change...');
+                            await checkExistingSubmission(user.email);
+                        } catch (error) {
+                            console.error('Error loading existing submission on auth state change:', error);
+                            // Don't block the auth flow if this fails
+                        }
+                    }
                     
                     // Ensure mobile devices have proper auth state
                     if (user && navigator.userAgent.includes('Mobile')) {
@@ -1579,21 +1590,35 @@
 
             function populateFormWithExistingData(data) {
                 try {
-                    // Populate text inputs
-                    const textFields = ['firstName', 'lastName', 'registrationNumber', 'phoneNumber', 'cgpa', 'yearOfStudy'];
-                    textFields.forEach(field => {
-                        const input = document.getElementById(field);
-                        if (input && data[field]) {
-                            input.value = data[field];
+                    // Populate text inputs with correct field mapping
+                    const fieldMapping = {
+                        'firstName': 'firstName',
+                        'lastName': 'lastName',
+                        'regNumber': 'regNumber',        // Registration Number field ID
+                        'phone': 'phone',                // Phone Number field ID
+                        'year': 'year'                   // Academic Year field ID
+                    };
+                    
+                    Object.keys(fieldMapping).forEach(fieldId => {
+                        const dataKey = fieldMapping[fieldId];
+                        const input = document.getElementById(fieldId);
+                        if (input && data[dataKey]) {
+                            input.value = data[dataKey];
                         }
                     });
                     
-                    // Populate textarea fields
-                    const textareaFields = ['whyJoinUs', 'prevExperience', 'expectations', 'additionalInfo'];
-                    textareaFields.forEach(field => {
-                        const textarea = document.getElementById(field);
-                        if (textarea && data[field]) {
-                            textarea.value = data[field];
+                    // Populate textarea fields with correct field mapping
+                    const textareaMapping = {
+                        'skills': 'skills',
+                        'motivation': 'motivation',
+                        'contribution': 'contribution'
+                    };
+                    
+                    Object.keys(textareaMapping).forEach(fieldId => {
+                        const dataKey = textareaMapping[fieldId];
+                        const textarea = document.getElementById(fieldId);
+                        if (textarea && data[dataKey]) {
+                            textarea.value = data[dataKey];
                         }
                     });
                     
