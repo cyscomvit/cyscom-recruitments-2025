@@ -182,6 +182,69 @@
             border-radius: 15px;
             padding: 2rem;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow-x: auto; /* Handle horizontal scrolling on mobile */
+            min-width: fit-content; /* Ensure container expands to fit content */
+            width: 100%; /* Take full available width */
+        }
+
+        /* Pagination controls */
+        .pagination-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+
+        .pagination-info {
+            color: #ffffff;
+            font-size: 14px;
+        }
+
+        .pagination-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .pagination-btn {
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background: #5a67d8;
+            transform: translateY(-1px);
+        }
+
+        .pagination-btn:disabled {
+            background: rgba(255, 255, 255, 0.3);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .entries-per-page {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #ffffff;
+            font-size: 14px;
+        }
+
+        .entries-per-page select {
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            color: #333;
+            font-size: 12px;
         }
 
         .section-header {
@@ -230,6 +293,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 1rem;
+            min-width: 800px; /* Ensure minimum width for table */
         }
 
         .applications-table th,
@@ -637,6 +701,28 @@
                 </div>
                 
                 <div id="applications-container" class="hidden">
+                    <!-- Pagination Controls Top -->
+                    <div class="pagination-controls" id="pagination-top">
+                        <div class="entries-per-page">
+                            <label>Show:</label>
+                            <select id="entries-per-page-select">
+                                <option value="10">10</option>
+                                <option value="25" selected>25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                                <option value="all">All</option>
+                            </select>
+                            <span>entries</span>
+                        </div>
+                        <div class="pagination-info" id="pagination-info-top">
+                            Showing 0 to 0 of 0 entries
+                        </div>
+                        <div class="pagination-buttons">
+                            <button class="pagination-btn" id="prev-btn-top" onclick="adminDashboard.previousPage()">Previous</button>
+                            <button class="pagination-btn" id="next-btn-top" onclick="adminDashboard.nextPage()">Next</button>
+                        </div>
+                    </div>
+
                     <table class="applications-table">
                         <thead>
                             <tr>
@@ -652,6 +738,28 @@
                             <!-- Applications will be loaded here -->
                         </tbody>
                     </table>
+
+                    <!-- Pagination Controls Bottom -->
+                    <div class="pagination-controls" id="pagination-bottom">
+                        <div class="entries-per-page">
+                            <label>Show:</label>
+                            <select id="entries-per-page-select-bottom">
+                                <option value="10">10</option>
+                                <option value="25" selected>25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                                <option value="all">All</option>
+                            </select>
+                            <span>entries</span>
+                        </div>
+                        <div class="pagination-info" id="pagination-info-bottom">
+                            Showing 0 to 0 of 0 entries
+                        </div>
+                        <div class="pagination-buttons">
+                            <button class="pagination-btn" id="prev-btn-bottom" onclick="adminDashboard.previousPage()">Previous</button>
+                            <button class="pagination-btn" id="next-btn-bottom" onclick="adminDashboard.nextPage()">Next</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
@@ -664,6 +772,8 @@
                 this.applications = [];
                 this.filteredApplications = [];
                 this.adminEmailsLoaded = false;
+                this.currentPage = 1;
+                this.entriesPerPage = 25; // Default entries per page
                 this.init();
             }
 
@@ -717,6 +827,9 @@
                 this.searchInput = document.getElementById('search-input');
                 this.departmentFilter = document.getElementById('department-filter');
                 this.statusFilter = document.getElementById('status-filter');
+                
+                // Pagination elements (will be created dynamically)
+                this.paginationContainer = null;
             }
 
             setupEventListeners() {
@@ -725,9 +838,71 @@
                 this.exportBtn.addEventListener('click', () => this.exportApplications());
                 
                 // Search and filter event listeners
-                this.searchInput.addEventListener('input', () => this.filterApplications());
-                this.departmentFilter.addEventListener('change', () => this.filterApplications());
-                this.statusFilter.addEventListener('change', () => this.filterApplications());
+                this.searchInput.addEventListener('input', () => this.filterAndResetPagination());
+                this.departmentFilter.addEventListener('change', () => this.filterAndResetPagination());
+                this.statusFilter.addEventListener('change', () => this.filterAndResetPagination());
+
+                // Pagination event listeners (set up after elements are created)
+                setTimeout(() => {
+                    const entriesSelect = document.getElementById('entries-per-page-select');
+                    const entriesSelectBottom = document.getElementById('entries-per-page-select-bottom');
+                    
+                    if (entriesSelect) {
+                        entriesSelect.addEventListener('change', (e) => {
+                            this.entriesPerPage = e.target.value === 'all' ? 'all' : parseInt(e.target.value);
+                            // Sync both selects
+                            entriesSelectBottom.value = e.target.value;
+                            this.currentPage = 1;
+                            this.renderApplicationsTable();
+                        });
+                    }
+
+                    if (entriesSelectBottom) {
+                        entriesSelectBottom.addEventListener('change', (e) => {
+                            this.entriesPerPage = e.target.value === 'all' ? 'all' : parseInt(e.target.value);
+                            // Sync both selects
+                            entriesSelect.value = e.target.value;
+                            this.currentPage = 1;
+                            this.renderApplicationsTable();
+                        });
+                    }
+
+                    // Navigation button event listeners
+                    document.querySelectorAll('.first-btn').forEach(btn => {
+                        btn.addEventListener('click', () => this.changePage('first'));
+                    });
+                    
+                    document.querySelectorAll('.prev-btn').forEach(btn => {
+                        btn.addEventListener('click', () => this.changePage('prev'));
+                    });
+                    
+                    document.querySelectorAll('.next-btn').forEach(btn => {
+                        btn.addEventListener('click', () => this.changePage('next'));
+                    });
+                    
+                    document.querySelectorAll('.last-btn').forEach(btn => {
+                        btn.addEventListener('click', () => this.changePage('last'));
+                    });
+
+                    // Current page inputs
+                    document.querySelectorAll('.current-page').forEach(input => {
+                        input.addEventListener('change', (e) => {
+                            const pageNumber = parseInt(e.target.value);
+                            if (!isNaN(pageNumber)) {
+                                this.goToPage(pageNumber);
+                            }
+                        });
+                        
+                        input.addEventListener('keypress', (e) => {
+                            if (e.key === 'Enter') {
+                                const pageNumber = parseInt(e.target.value);
+                                if (!isNaN(pageNumber)) {
+                                    this.goToPage(pageNumber);
+                                }
+                            }
+                        });
+                    });
+                }, 100);
             }
 
             setupTabCloseSignOut() {
@@ -918,6 +1093,96 @@
                 this.errorContainer.classList.add('hidden');
             }
 
+            updatePaginationControls() {
+                const applicationsToRender = this.filteredApplications.length > 0 ? this.filteredApplications : this.applications;
+                const totalEntries = applicationsToRender.length;
+                
+                if (this.entriesPerPage === 'all') {
+                    // Hide pagination controls when showing all entries
+                    const paginationContainers = document.querySelectorAll('.pagination-container');
+                    paginationContainers.forEach(container => container.style.display = 'none');
+                    return;
+                } else {
+                    // Show pagination controls
+                    const paginationContainers = document.querySelectorAll('.pagination-container');
+                    paginationContainers.forEach(container => container.style.display = 'flex');
+                }
+
+                const totalPages = Math.ceil(totalEntries / this.entriesPerPage);
+                
+                // Update page info
+                const pageInfos = document.querySelectorAll('.page-info');
+                const startEntry = totalEntries === 0 ? 0 : (this.currentPage - 1) * this.entriesPerPage + 1;
+                const endEntry = Math.min(this.currentPage * this.entriesPerPage, totalEntries);
+                
+                pageInfos.forEach(info => {
+                    info.textContent = `Showing ${startEntry}-${endEntry} of ${totalEntries} entries`;
+                });
+
+                // Update buttons
+                const prevButtons = document.querySelectorAll('.prev-btn');
+                const nextButtons = document.querySelectorAll('.next-btn');
+                const firstButtons = document.querySelectorAll('.first-btn');
+                const lastButtons = document.querySelectorAll('.last-btn');
+
+                prevButtons.forEach(btn => btn.disabled = this.currentPage <= 1);
+                nextButtons.forEach(btn => btn.disabled = this.currentPage >= totalPages);
+                firstButtons.forEach(btn => btn.disabled = this.currentPage <= 1);
+                lastButtons.forEach(btn => btn.disabled = this.currentPage >= totalPages);
+
+                // Update current page display
+                const currentPageInputs = document.querySelectorAll('.current-page');
+                currentPageInputs.forEach(input => {
+                    input.value = this.currentPage;
+                    input.max = totalPages;
+                });
+
+                const totalPagesSpans = document.querySelectorAll('.total-pages');
+                totalPagesSpans.forEach(span => span.textContent = totalPages);
+            }
+
+            changePage(direction) {
+                const applicationsToRender = this.filteredApplications.length > 0 ? this.filteredApplications : this.applications;
+                const totalPages = Math.ceil(applicationsToRender.length / this.entriesPerPage);
+
+                switch(direction) {
+                    case 'first':
+                        this.currentPage = 1;
+                        break;
+                    case 'prev':
+                        if (this.currentPage > 1) this.currentPage--;
+                        break;
+                    case 'next':
+                        if (this.currentPage < totalPages) this.currentPage++;
+                        break;
+                    case 'last':
+                        this.currentPage = totalPages;
+                        break;
+                }
+
+                this.renderApplicationsTable();
+            }
+
+            changeEntriesPerPage(value) {
+                if (value === 'all') {
+                    this.entriesPerPage = 'all';
+                } else {
+                    this.entriesPerPage = parseInt(value);
+                }
+                this.currentPage = 1; // Reset to first page when changing entries per page
+                this.renderApplicationsTable();
+            }
+
+            goToPage(pageNumber) {
+                const applicationsToRender = this.filteredApplications.length > 0 ? this.filteredApplications : this.applications;
+                const totalPages = Math.ceil(applicationsToRender.length / this.entriesPerPage);
+                
+                if (pageNumber >= 1 && pageNumber <= totalPages) {
+                    this.currentPage = pageNumber;
+                    this.renderApplicationsTable();
+                }
+            }
+
             async loadApplications() {
                 try {
                     console.log('Loading applications from Firebase...');
@@ -1055,6 +1320,11 @@
                 document.getElementById('shortlisted-count').textContent = this.applications.filter(app => app.reviewStatus === 'shortlisted').length;
             }
 
+            filterAndResetPagination() {
+                this.currentPage = 1; // Reset to first page when filtering
+                this.filterApplications();
+            }
+
             filterApplications() {
                 const searchTerm = this.searchInput.value.toLowerCase().trim();
                 const departmentFilter = this.departmentFilter.value;
@@ -1088,6 +1358,64 @@
                 this.renderApplicationsTable();
             }
 
+            filterAndResetPagination() {
+                this.currentPage = 1; // Reset to first page when filtering
+                this.filterApplications();
+            }
+
+            nextPage() {
+                const totalPages = this.getTotalPages();
+                if (this.currentPage < totalPages) {
+                    this.currentPage++;
+                    this.renderApplicationsTable();
+                }
+            }
+
+            previousPage() {
+                if (this.currentPage > 1) {
+                    this.currentPage--;
+                    this.renderApplicationsTable();
+                }
+            }
+
+            getTotalPages() {
+                if (this.entriesPerPage === 'all') return 1;
+                const totalEntries = this.filteredApplications.length > 0 ? this.filteredApplications.length : this.applications.length;
+                return Math.ceil(totalEntries / this.entriesPerPage);
+            }
+
+            updatePaginationControls() {
+                const applicationsToRender = this.filteredApplications.length > 0 ? this.filteredApplications : this.applications;
+                const totalEntries = applicationsToRender.length;
+                const totalPages = this.getTotalPages();
+                
+                let startEntry, endEntry;
+                if (this.entriesPerPage === 'all') {
+                    startEntry = totalEntries > 0 ? 1 : 0;
+                    endEntry = totalEntries;
+                } else {
+                    startEntry = totalEntries > 0 ? ((this.currentPage - 1) * this.entriesPerPage) + 1 : 0;
+                    endEntry = Math.min(this.currentPage * this.entriesPerPage, totalEntries);
+                }
+
+                // Update pagination info
+                const infoText = `Showing ${startEntry} to ${endEntry} of ${totalEntries} entries`;
+                document.getElementById('pagination-info-top').textContent = infoText;
+                document.getElementById('pagination-info-bottom').textContent = infoText;
+
+                // Update button states
+                const prevBtns = [document.getElementById('prev-btn-top'), document.getElementById('prev-btn-bottom')];
+                const nextBtns = [document.getElementById('next-btn-top'), document.getElementById('next-btn-bottom')];
+
+                prevBtns.forEach(btn => {
+                    if (btn) btn.disabled = this.currentPage <= 1;
+                });
+
+                nextBtns.forEach(btn => {
+                    if (btn) btn.disabled = this.currentPage >= totalPages || this.entriesPerPage === 'all';
+                });
+            }
+
             renderApplicationsTable() {
                 const tbody = document.getElementById('applications-tbody');
                 const loadingDiv = document.getElementById('applications-loading');
@@ -1109,7 +1437,18 @@
                         </tr>
                     `;
                 } else {
-                    applicationsToRender.slice(0, 50).forEach(app => {
+                    // Apply pagination
+                    let startIndex = 0;
+                    let endIndex = applicationsToRender.length;
+                    
+                    if (this.entriesPerPage !== 'all') {
+                        startIndex = (this.currentPage - 1) * this.entriesPerPage;
+                        endIndex = Math.min(startIndex + this.entriesPerPage, applicationsToRender.length);
+                    }
+
+                    const paginatedApplications = applicationsToRender.slice(startIndex, endIndex);
+                    
+                    paginatedApplications.forEach(app => {
                         const row = document.createElement('tr');
                         
                         // Handle timestamp formatting
@@ -1214,6 +1553,9 @@
                         tbody.appendChild(row);
                     });
                 }
+
+                // Update pagination controls
+                this.updatePaginationControls();
 
                 loadingDiv.classList.add('hidden');
                 container.classList.remove('hidden');
