@@ -245,8 +245,69 @@
             color: #333;
         }
 
-        .applications-table tr:hover {
+                        .applications-table tr:hover {
             background: #11c6e6;
+        }
+
+        /* Reviewer info tick */
+        .reviewer-tick {
+            display: inline-block;
+            margin-left: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            opacity: 0.7;
+            transition: opacity 0.2s ease;
+        }
+
+        .reviewer-tick.approved {
+            color: #28a745;
+        }
+
+        .reviewer-tick.rejected {
+            color: #dc3545;
+        }
+
+        .reviewer-tick:hover {
+            opacity: 1;
+        }
+
+        .reviewer-tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .reviewer-tooltip .tooltip-text {
+            visibility: hidden;
+            width: 200px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1000;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .reviewer-tooltip .tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
+
+        .reviewer-tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
         }
 
         .status-badge {
@@ -899,10 +960,12 @@
                     // Wait for all review status checks to complete
                     const reviewStatuses = await Promise.all(applicationPromises);
                     
-                    // Update applications with their review status
-                    reviewStatuses.forEach((status, index) => {
-                        if (status) {
-                            this.applications[index].reviewStatus = status;
+                    // Update applications with their review status and reviewer info
+                    reviewStatuses.forEach((statusInfo, index) => {
+                        if (statusInfo) {
+                            this.applications[index].reviewStatus = statusInfo.status;
+                            this.applications[index].reviewedBy = statusInfo.reviewedBy;
+                            this.applications[index].reviewedAt = statusInfo.reviewedAt;
                         }
                     });
 
@@ -936,7 +999,12 @@
                     );
                     
                     if (shortlistedDoc.exists()) {
-                        return 'shortlisted';
+                        const data = shortlistedDoc.data();
+                        return {
+                            status: 'shortlisted',
+                            reviewedBy: data.reviewedBy || 'N/A',
+                            reviewedAt: data.reviewedAt
+                        };
                     }
                     
                     // Check rejected collection
@@ -945,13 +1013,26 @@
                     );
                     
                     if (rejectedDoc.exists()) {
-                        return 'rejected';
+                        const data = rejectedDoc.data();
+                        return {
+                            status: 'rejected',
+                            reviewedBy: data.reviewedBy || 'N/A',
+                            reviewedAt: data.reviewedAt
+                        };
                     }
                     
-                    return 'new';
+                    return {
+                        status: 'new',
+                        reviewedBy: null,
+                        reviewedAt: null
+                    };
                 } catch (error) {
                     console.error('Error checking review status:', error);
-                    return 'new';
+                    return {
+                        status: 'new',
+                        reviewedBy: null,
+                        reviewedAt: null
+                    };
                 }
             }
 
@@ -1077,19 +1158,46 @@
                         
                         // Create action buttons based on current status
                         let actionButtons = '';
+                        let reviewerTick = '';
+                        
+                        // Add reviewer tick if application has been reviewed
+                        if (app.reviewedBy && (app.reviewStatus === 'shortlisted' || app.reviewStatus === 'rejected')) {
+                            const reviewDate = app.reviewedAt ? 
+                                (app.reviewedAt.seconds ? 
+                                    new Date(app.reviewedAt.seconds * 1000).toLocaleString() : 
+                                    new Date(app.reviewedAt).toLocaleString()) : 
+                                'Unknown date';
+                            
+                            // Use different icons and colors for different statuses
+                            const tickIcon = app.reviewStatus === 'shortlisted' ? '✓' : '✗';
+                            const tickClass = app.reviewStatus === 'shortlisted' ? 'approved' : 'rejected';
+                            
+                            reviewerTick = `
+                                <span class="reviewer-tooltip">
+                                    <span class="reviewer-tick ${tickClass}">${tickIcon}</span>
+                                    <span class="tooltip-text">
+                                        Reviewed by: ${app.reviewedBy}<br>
+                                        On: ${reviewDate}
+                                    </span>
+                                </span>
+                            `;
+                        }
+                        
                         if (app.reviewStatus !== 'shortlisted' && app.reviewStatus !== 'rejected') {
                             actionButtons = `
                                 <div class="action-buttons">
                                     <button class="action-btn view-btn" onclick="adminDashboard.showApplicationDetails('${app.id}')">View</button>
                                     <button class="action-btn shortlist-btn" onclick="adminDashboard.shortlistApplication('${app.id}')">Shortlist</button>
                                     <button class="action-btn reject-btn" onclick="adminDashboard.rejectApplication('${app.id}')">Reject</button>
+                                    ${reviewerTick}
                                 </div>
                             `;
                         } else {
                             actionButtons = `
                                 <div class="action-buttons">
                                     <button class="action-btn view-btn" onclick="adminDashboard.showApplicationDetails('${app.id}')">View</button>
-                                    <span style="font-size: 12px; color: #666;">${statusText}</span>
+                                    <span style="font-size: 12px; color: #FFF0D3;">${statusText}</span>
+                                    ${reviewerTick}
                                 </div>
                             `;
                         }
@@ -1138,6 +1246,20 @@
                         new Date(app.timestamp.seconds * 1000).toLocaleString() : 
                         new Date(app.timestamp).toLocaleString();
                     details.push(`Submitted: ${date}`);
+                }
+                
+                // Add review information if available
+                if (app.reviewStatus && app.reviewStatus !== 'new') {
+                    details.push(`Review Status: ${app.reviewStatus.charAt(0).toUpperCase() + app.reviewStatus.slice(1)}`);
+                    if (app.reviewedBy) {
+                        details.push(`Reviewed By: ${app.reviewedBy}`);
+                    }
+                    if (app.reviewedAt) {
+                        const reviewDate = app.reviewedAt.seconds ? 
+                            new Date(app.reviewedAt.seconds * 1000).toLocaleString() : 
+                            new Date(app.reviewedAt).toLocaleString();
+                        details.push(`Reviewed At: ${reviewDate}`);
+                    }
                 }
                 
                 // Create a better modal-style display instead of alert
@@ -1221,8 +1343,10 @@
 
                     console.log('Successfully added to shortlisted collection');
 
-                    // Update the local application status
+                    // Update the local application status and reviewer info
                     app.reviewStatus = 'shortlisted';
+                    app.reviewedBy = this.currentUser.email;
+                    app.reviewedAt = new Date();
 
                     // Refresh the table
                     this.renderApplicationsTable();
@@ -1270,8 +1394,10 @@
 
                     console.log('Successfully added to rejected collection');
 
-                    // Update the local application status
+                    // Update the local application status and reviewer info
                     app.reviewStatus = 'rejected';
+                    app.reviewedBy = this.currentUser.email;
+                    app.reviewedAt = new Date();
 
                     // Refresh the table
                     this.renderApplicationsTable();
