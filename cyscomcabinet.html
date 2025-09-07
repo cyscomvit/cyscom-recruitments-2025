@@ -276,17 +276,20 @@
             background: #28a745;
             color: white;
             border: none;
-            border-left: 10px;
             padding: 10px 20px;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
-            font-weight: 500;
-            transition: all 0.3s ease;
+            font-weight: 600;
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+            box-shadow: 0 8px 20px rgba(40,167,69,0.12);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .export-btn:hover {
-            background: #218838;
-            transform: translateY(-1px);
+        .export-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 18px 40px rgba(40,167,69,0.14);
         }
 
         .applications-table {
@@ -676,7 +679,21 @@
                             placeholder="Search by name, email, or department..."
                             class="search-input"
                         >
-                        <select id="department-filter" class="department-filter">
+
+                        <!-- Primary department filter: restrict to 1st choice only -->
+                        <select id="primary-department-filter" class="department-filter" title="Filter by 1st Department">
+                            <option value="">1st Dept (any)</option>
+                            <option value="technical">Technical</option>
+                            <option value="design">Design</option>
+                            <option value="dev">Development</option>
+                            <option value="social-media">Social Media</option>
+                            <option value="content">Content</option>
+                            <option value="event-management">Event Management</option>
+                            <!-- <option value="other">Other</option> -->
+                        </select>
+
+                        <!-- Broad department filter (matches primary OR secondary) -->
+                        <select id="department-filter" class="department-filter" title="Filter by any department">
                             <option value="">All Departments</option>
                             <option value="technical">Technical</option>
                             <option value="design">Design</option>
@@ -684,9 +701,9 @@
                             <option value="social-media">Social Media</option>
                             <option value="content">Content</option>
                             <option value="event-management">Event Management</option>
+                            <option value="other">Other</option>
                         </select>
-                            <option value="Other">Other</option>
-                        </select>
+
                         <select id="status-filter" class="status-filter">
                             <option value="">All Status</option>
                             <option value="new">New</option>
@@ -826,6 +843,7 @@
                 this.exportBtn = document.getElementById('export-btn');
                 this.searchInput = document.getElementById('search-input');
                 this.departmentFilter = document.getElementById('department-filter');
+                this.primaryDepartmentFilter = document.getElementById('primary-department-filter');
                 this.statusFilter = document.getElementById('status-filter');
                 
                 // Pagination elements (will be created dynamically)
@@ -840,6 +858,7 @@
                 // Search and filter event listeners
                 this.searchInput.addEventListener('input', () => this.filterAndResetPagination());
                 this.departmentFilter.addEventListener('change', () => this.filterAndResetPagination());
+                if (this.primaryDepartmentFilter) this.primaryDepartmentFilter.addEventListener('change', () => this.filterAndResetPagination());
                 this.statusFilter.addEventListener('change', () => this.filterAndResetPagination());
 
                 // Pagination event listeners (set up after elements are created)
@@ -1320,14 +1339,12 @@
                 document.getElementById('shortlisted-count').textContent = this.applications.filter(app => app.reviewStatus === 'shortlisted').length;
             }
 
-            filterAndResetPagination() {
-                this.currentPage = 1; // Reset to first page when filtering
-                this.filterApplications();
-            }
+            // ...existing code...
 
             filterApplications() {
                 const searchTerm = this.searchInput.value.toLowerCase().trim();
                 const departmentFilter = this.departmentFilter.value;
+                const primaryFilter = this.primaryDepartmentFilter ? this.primaryDepartmentFilter.value : '';
                 const statusFilter = this.statusFilter.value;
 
                 this.filteredApplications = this.applications.filter(app => {
@@ -1343,11 +1360,17 @@
                         departmentPrimary.includes(searchTerm) ||
                         departmentSecondary.includes(searchTerm);
 
-                    // Department filter - check both primary and secondary, plus old format
-                    const matchesDepartment = !departmentFilter || 
-                        app.departmentPrimary === departmentFilter || 
-                        app.departmentSecondary === departmentFilter ||
-                        app.department === departmentFilter;
+                    // Department filters
+                    // If a primary-only filter is selected, require departmentPrimary match
+                    let matchesDepartment = true;
+                    if (primaryFilter) {
+                        matchesDepartment = app.departmentPrimary === primaryFilter;
+                    } else if (departmentFilter) {
+                        // Broad department filter: match primary OR secondary OR legacy department field
+                        matchesDepartment = app.departmentPrimary === departmentFilter || 
+                                            app.departmentSecondary === departmentFilter ||
+                                            app.department === departmentFilter;
+                    }
 
                     // Status filter
                     const matchesStatus = !statusFilter || (app.reviewStatus || 'new') === statusFilter;
