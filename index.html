@@ -377,7 +377,7 @@
             </div>
         </div>
         <div id="moto">
-            <h2>THE BEST CYBERSECURITY CLUB IN VIT CHENNAI.</h2>
+            <h2>THE BEST CYBERSECUIRTY CLUB IN VIT CHENNAI.</h2>
             <div class="para">
                 <p>The Cybersecurity Student Community (CYSCOM) was formed in 2022 and ever since it has had one aim only, spreading awareness about cyber security and malware as well as ransomware threats in society and circles of students and teaching them how to deploy counter measures through various events and undertakings</p>
             </div>
@@ -428,14 +428,9 @@
                         </div>
                         
                         <div class="auth-content">
-                            <button id="google-sign-in-btn" class="google-auth-btn">
-                                <i class="ri-google-line"></i>
-                                <span>Continue with Google</span>
-                            </button>
-                            
-                            <div class="auth-info">
-                                <p><i class="ri-information-line"></i> We use Google Sign-In to verify your identity and prevent spam applications.</p>
-                                <p><i class="ri-lock-line"></i> Your information is secure and will only be used for the application process.</p>
+                            <div style="padding:1rem 0; text-align:center; color:#333;">
+                                <strong>Applications are closed.</strong>
+                                <p style="margin:0.5rem 0 0 0; color:#666;">Sign-in is disabled while registrations are closed.</p>
                             </div>
                         </div>
                         
@@ -461,120 +456,17 @@
             </div>
 
             <div id="recruitment-section">
-                <div id="recruitment-header">
-                    <h2>JOIN CYSCOM</h2>
-                    <h3>Apply to Become Part of Our Cybersecurity Community</h3>
-                    <h4>FORM CLOSES ON 7th SEPTEMBER, 2025</h4>
-                    <p>Choose your department and submit your application to join CYSCOM's mission of spreading cybersecurity awareness.</p>
-                </div>
-                
-                <!-- Recruitment Form -->
-                <div id="recruitment-form-container">
-                    <form id="recruitment-form" method="post" action="#" onsubmit="return false;" novalidate>
-                        <!-- Personal Information Section -->
-                        <div class="form-section">
-                            <!-- <h4>Personal Information</h4> -->
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="firstName">First Name <span class="required">*</span></label>
-                                    <input type="text" id="firstName" name="firstName" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="lastName">Last Name <span class="required">*</span></label>
-                                    <input type="text" id="lastName" name="lastName" required>
-                                </div>
-                            </div>
-                            
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="email">Email Address <span class="required">*</span></label>
-                                    <input type="email" id="email" name="email" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="phone">Phone Number <span class="required">*</span></label>
-                                    <input type="tel" id="phone" name="phone" required>
-                                </div>
-                            </div>
-                            
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="regNumber">Registration Number <span class="required">*</span></label>
-                                    <input type="text" id="regNumber" name="regNumber" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="year">Academic Year <span class="required">*</span></label>
-                                    <select id="year" name="year" required>
-                                        <option value="" style="color:black">Select Year</option>
-                                        <option value="1st" style="color:black">1st Year</option>
-                                        <option value="2nd" style="color:black">2nd Year</option>
-                                        <option value="3rd" style="color:black">3rd Year</option>
-                                        <option value="4th" style="color:black">4th Year</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Honeypot field for bot protection (hidden) -->
-                        <div style="position: absolute; left: -9999px; visibility: hidden;">
-                            <input type="text" name="website" tabindex="-1" autocomplete="off" />
-                        </div>
-
-                        <!-- Department Selection -->
-                        <div class="form-section">
-                            <h4>Choose Your Departments <span class="required">*</span></h4>
-                            <p style="color: #666; font-size: 0.9rem; margin-bottom: 20px;">Select your 1st and 2nd preference departments. </p>
-                            <div id="animated-department-selector"></div>
-                            <!-- Hidden inputs to store selected departments -->
-                            <input type="hidden" id="department-primary" name="departmentPrimary" required>
-                            <input type="hidden" id="department-secondary" name="departmentSecondary" required>
-                        </div>
-
-                        <!-- Skills and Experience -->
-                        <div class="form-section">
-                            <!-- <h4>Skills & Experience</h4> -->
-                            <div class="form-group">
-                                <label for="skills">What skills or experience do you bring that would make you a strong asset to your chosen departments? <span class="required">*</span></label>
-                                <textarea id="skills" name="skills" placeholder="List your relevant skills, technologies, tools, or experience..." required></textarea>
-                            </div>
-                        </div>
-
-                        <!-- Motivation -->
-                        <div class="form-section">
-                            <h4>Tell Us About Yourself</h4>
-                            <div class="form-group">
-                                <label for="motivation">Why do you want to join CYSCOM? <span class="required">*</span></label>
-                                <textarea id="motivation" name="motivation" placeholder="Tell us why you're interested in cybersecurity and what motivates you to join CYSCOM..." required></textarea>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="contribution">Explain “cybersecurity” to your non-tech friend without using the words “hacking” or “internet.” <span class="required">*</span></label>
-                                <textarea id="contribution" name="contribution" placeholder="Show your creativity..." required></textarea>
-                            </div>
-                        </div>
-
-
-                        <div class="form-actions">
-                            <button type="submit" id="submit-btn" class="submit-button">
-                                <span class="btn-text">Submit Application</span>
-                                <span class="loading-spinner" style="display: none;">
-                                    <i class="ri-loader-4-line"></i>
-                                </span>
-                            </button>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Success/Error Messages -->
-                <div id="form-messages" style="display: none;">
-                    <div id="success-message" class="message success-msg" style="display: none;">
-                        <p>Thank you for your interest in CYSCOM. We'll review your application and get back to you soon. Join the below WhatsApp group for updates.</p>
-                    </div>
-                    
-                    <div id="error-message" class="message error-msg" style="display: none;">
-                        <h4>Submission Failed</h4>
-                        <p>There was an error submitting your application. Please try again.</p>
+                <div style="display:flex; align-items:center; justify-content:center; padding:4rem 2rem;">
+                    <div class="closed-message" style="max-width:760px; width:100%; border-radius:12px; padding:2.5rem; text-align:center;">
+                        <b><h1 style="font-size: 3rem ;margin:0 0 .5rem 0; color:#07c5f5;">Registrations are now Closed</h2></b>
+                        <p style="color:#ffffff; font-size:1.05rem; margin:0 0 1rem 0;">Thank you for your interest — applications are now closed.</p>
+                        <p style="color:#ffffff; margin:0 0 1rem 0;">Follow our social channels for results.</p>
                     </div>
                 </div>
+
+                <!-- Hidden dummy form + submit button to prevent JS errors from scripts that expect these elements -->
+                <form id="recruitment-form" style="display:none; visibility:hidden;" aria-hidden="true"></form>
+                <button id="submit-btn" type="button" style="display:none; visibility:hidden;" aria-hidden="true"></button>
             </div>
             <hr>
         </div>
