@@ -529,7 +529,7 @@
     <!-- Firebase SDK -->
     <script type="module">
       import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
-      import { getFirestore, collection, getDocs, query, orderBy, doc, getDoc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
+    import { getFirestore, collection, getDocs, query, orderBy, doc, getDoc, setDoc, serverTimestamp, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
       import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
       
       const firebaseConfig = {
@@ -579,7 +579,7 @@
       window.firebase = { 
         app, db, auth, provider, 
         signInWithPopup, signOut, onAuthStateChanged,
-        collection, getDocs, query, orderBy, doc, getDoc, setDoc, serverTimestamp,
+    collection, getDocs, query, orderBy, doc, getDoc, setDoc, serverTimestamp, onSnapshot,
         loadAdminEmails,
         isAdmin: (email) => ADMIN_EMAILS.includes(email),
         getAdminEmails: () => ADMIN_EMAILS,
@@ -1202,76 +1202,59 @@
                 }
             }
 
-            async loadApplications() {
+            loadApplications() {
+                // Use Firestore real-time updates
                 try {
-                    console.log('Loading applications from Firebase...');
-                    console.log('Current user:', this.currentUser?.email);
-                    console.log('Auth token exists:', !!window.firebase.auth.currentUser);
-                    
+                    console.log('Setting up real-time listener for applications...');
                     const applicationsRef = window.firebase.collection(window.firebase.db, 'applications');
-                    // Try different field names for ordering (submissionTime is more common)
                     let q;
                     try {
                         q = window.firebase.query(applicationsRef, window.firebase.orderBy('submissionTime', 'desc'));
                     } catch {
-                        // Fallback to timestamp if submissionTime doesn't exist
                         q = window.firebase.query(applicationsRef, window.firebase.orderBy('timestamp', 'desc'));
                     }
-                    
-                    console.log('Executing Firestore query...');
-                    const querySnapshot = await window.firebase.getDocs(q);
-                    console.log('Query completed, docs found:', querySnapshot.size);
-                    
-                    this.applications = [];
-                    const applicationPromises = [];
-                    
-                    querySnapshot.forEach((doc) => {
-                        const appData = doc.data();
-                        console.log('Application data:', appData); // Debug log
-                        
-                        const appWithId = { 
-                            id: doc.id, 
-                            ...appData,
-                            reviewStatus: 'new' // Default status
-                        };
-                        
-                        this.applications.push(appWithId);
-                        
-                        // Check if this application exists in shortlisted or rejected collections
-                        applicationPromises.push(this.checkApplicationReviewStatus(doc.id));
+                    // Remove previous listener if any
+                    if (this._unsubscribeApps) this._unsubscribeApps();
+                    this._unsubscribeApps = window.firebase.onSnapshot(q, async (querySnapshot) => {
+                        this.applications = [];
+                        const applicationPromises = [];
+                        querySnapshot.forEach((doc) => {
+                            const appData = doc.data();
+                            const appWithId = {
+                                id: doc.id,
+                                ...appData,
+                                reviewStatus: 'new'
+                            };
+                            this.applications.push(appWithId);
+                            applicationPromises.push(this.checkApplicationReviewStatus(doc.id));
+                        });
+                        // Wait for all review status checks to complete
+                        const reviewStatuses = await Promise.all(applicationPromises);
+                        reviewStatuses.forEach((statusInfo, index) => {
+                            if (statusInfo) {
+                                this.applications[index].reviewStatus = statusInfo.status;
+                                this.applications[index].reviewedBy = statusInfo.reviewedBy;
+                                this.applications[index].reviewedAt = statusInfo.reviewedAt;
+                            }
+                        });
+                        this.updateStats();
+                        this.filteredApplications = [...this.applications];
+                        this.renderApplicationsTable();
+                    }, (error) => {
+                        console.error('❌ Error in real-time listener:', error);
+                        const loadingDiv = document.getElementById('applications-loading');
+                        loadingDiv.innerHTML = `
+                            <div style="color: #c62828; text-align: center; padding: 2rem;">
+                                <h3>⚠️ Failed to load applications</h3>
+                                <p>Error: ${error.message}</p>
+                                <button onclick="location.reload()" style="padding: 8px 16px; margin-top: 1rem; background: #4285f4; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                    Retry
+                                </button>
+                            </div>
+                        `;
                     });
-                    
-                    // Wait for all review status checks to complete
-                    const reviewStatuses = await Promise.all(applicationPromises);
-                    
-                    // Update applications with their review status and reviewer info
-                    reviewStatuses.forEach((statusInfo, index) => {
-                        if (statusInfo) {
-                            this.applications[index].reviewStatus = statusInfo.status;
-                            this.applications[index].reviewedBy = statusInfo.reviewedBy;
-                            this.applications[index].reviewedAt = statusInfo.reviewedAt;
-                        }
-                    });
-
-                    console.log(`Loaded ${this.applications.length} applications`);
-                    this.updateStats();
-                    this.filteredApplications = [...this.applications]; // Initialize filtered applications
-                    this.renderApplicationsTable();
-                    
                 } catch (error) {
-                    console.error('❌ Error loading applications:', error);
-                    
-                    // Show error message to user
-                    const loadingDiv = document.getElementById('applications-loading');
-                    loadingDiv.innerHTML = `
-                        <div style="color: #c62828; text-align: center; padding: 2rem;">
-                            <h3>⚠️ Failed to load applications</h3>
-                            <p>Error: ${error.message}</p>
-                            <button onclick="location.reload()" style="padding: 8px 16px; margin-top: 1rem; background: #4285f4; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                                Retry
-                            </button>
-                        </div>
-                    `;
+                    console.error('❌ Error setting up real-time listener:', error);
                 }
             }
 
