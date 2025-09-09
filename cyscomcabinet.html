@@ -692,9 +692,9 @@
                             <!-- <option value="other">Other</option> -->
                         </select>
 
-                        <!-- Broad department filter (matches primary OR secondary) -->
-                        <select id="department-filter" class="department-filter" title="Filter by any department">
-                            <option value="">All Departments</option>
+                        <!-- Secondary department filter: restrict to 2nd choice only -->
+                        <select id="secondary-department-filter" class="department-filter" title="Filter by 2nd Department">
+                            <option value="">2nd Dept (any)</option>
                             <option value="technical">Technical</option>
                             <option value="design">Design</option>
                             <option value="dev">Development</option>
@@ -842,7 +842,7 @@
                 this.userName = document.getElementById('user-name');
                 this.exportBtn = document.getElementById('export-btn');
                 this.searchInput = document.getElementById('search-input');
-                this.departmentFilter = document.getElementById('department-filter');
+                this.secondaryDepartmentFilter = document.getElementById('secondary-department-filter');
                 this.primaryDepartmentFilter = document.getElementById('primary-department-filter');
                 this.statusFilter = document.getElementById('status-filter');
                 
@@ -857,7 +857,7 @@
                 
                 // Search and filter event listeners
                 this.searchInput.addEventListener('input', () => this.filterAndResetPagination());
-                this.departmentFilter.addEventListener('change', () => this.filterAndResetPagination());
+                if (this.secondaryDepartmentFilter) this.secondaryDepartmentFilter.addEventListener('change', () => this.filterAndResetPagination());
                 if (this.primaryDepartmentFilter) this.primaryDepartmentFilter.addEventListener('change', () => this.filterAndResetPagination());
                 this.statusFilter.addEventListener('change', () => this.filterAndResetPagination());
 
@@ -1326,7 +1326,7 @@
 
             filterApplications() {
                 const searchTerm = this.searchInput.value.toLowerCase().trim();
-                const departmentFilter = this.departmentFilter.value;
+                const secondaryFilter = this.secondaryDepartmentFilter ? this.secondaryDepartmentFilter.value : '';
                 const primaryFilter = this.primaryDepartmentFilter ? this.primaryDepartmentFilter.value : '';
                 const statusFilter = this.statusFilter.value;
 
@@ -1344,15 +1344,15 @@
                         departmentSecondary.includes(searchTerm);
 
                     // Department filters
-                    // If a primary-only filter is selected, require departmentPrimary match
+                    // Support independent primary (1st choice) and secondary (2nd choice) filters.
+                    // If both are selected, require both to match. If only one is selected, require that match.
                     let matchesDepartment = true;
-                    if (primaryFilter) {
+                    if (primaryFilter && secondaryFilter) {
+                        matchesDepartment = (app.departmentPrimary === primaryFilter) && (app.departmentSecondary === secondaryFilter || app.department === secondaryFilter);
+                    } else if (primaryFilter) {
                         matchesDepartment = app.departmentPrimary === primaryFilter;
-                    } else if (departmentFilter) {
-                        // Broad department filter: match primary OR secondary OR legacy department field
-                        matchesDepartment = app.departmentPrimary === departmentFilter || 
-                                            app.departmentSecondary === departmentFilter ||
-                                            app.department === departmentFilter;
+                    } else if (secondaryFilter) {
+                        matchesDepartment = app.departmentSecondary === secondaryFilter || app.department === secondaryFilter;
                     }
 
                     // Status filter
