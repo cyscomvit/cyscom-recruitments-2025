@@ -1529,10 +1529,14 @@
                         }
                         
                         if (app.reviewStatus !== 'shortlisted' && app.reviewStatus !== 'rejected') {
+                            // Show two shortlist buttons (one for each department) when available
+                const primaryLabel = app.departmentPrimary ? `Shortlist: ${app.departmentPrimary}` : 'Shortlist: Primary';
+                const secondaryLabel = app.departmentSecondary ? `Shortlist: ${app.departmentSecondary}` : 'Shortlist: Secondary';
                             actionButtons = `
                                 <div class="action-buttons">
                                     <button class="action-btn view-btn" onclick="adminDashboard.showApplicationDetails('${app.id}')">View</button>
-                                    <button class="action-btn shortlist-btn" onclick="adminDashboard.shortlistApplication('${app.id}')">Shortlist</button>
+                    <button class="action-btn shortlist-btn" style="min-width:130px; padding:8px 12px;" onclick="adminDashboard.shortlistApplication('${app.id}', 'primary')">${primaryLabel}</button>
+                    <button class="action-btn shortlist-btn" style="min-width:130px; padding:8px 12px;" onclick="adminDashboard.shortlistApplication('${app.id}', 'secondary')">${secondaryLabel}</button>
                                     <button class="action-btn reject-btn" onclick="adminDashboard.rejectApplication('${app.id}')">Reject</button>
                                     ${reviewerTick}
                                 </div>
@@ -1641,16 +1645,19 @@
                     <div style="line-height: 1.6; color: #555;">
                         ${details.map(detail => `<p style="margin: 0.5rem 0;"><strong>${detail.split(': ')[0]}:</strong> ${detail.split(': ')[1] || 'N/A'}</p>`).join('')}
                     </div>
-                    <button onclick="this.parentElement.parentElement.remove()" style="
-                        margin-top: 1.5rem;
-                        padding: 10px 20px;
-                        background: #667eea;
-                        color: white;
-                        border: none;
-                        border-radius: 8px;
-                        cursor: pointer;
-                        font-weight: 500;
-                    ">Close</button>
+                    <div style="margin-top:1rem; display:flex; gap:8px; align-items:center;">
+                        <button id="modal-shortlist-primary-btn" style="min-width:130px; padding:8px 12px; background:#28a745; color:#fff; border:none; border-radius:8px; cursor:pointer;">${app.departmentPrimary ? 'Shortlist: ' + app.departmentPrimary : 'Shortlist: Primary'}</button>
+                        <button id="modal-shortlist-secondary-btn" style="min-width:130px; padding:8px 12px; background:#28a745; color:#fff; border:none; border-radius:8px; cursor:pointer;">${app.departmentSecondary ? 'Shortlist: ' + app.departmentSecondary : 'Shortlist: Secondary'}</button>
+                        <button onclick="this.parentElement.parentElement.remove()" style="
+                            padding: 10px 20px;
+                            background: #667eea;
+                            color: white;
+                            border: none;
+                            border-radius: 8px;
+                            cursor: pointer;
+                            font-weight: 500;
+                        ">Close</button>
+                    </div>
                 `;
                 
                 modal.appendChild(content);
@@ -1662,9 +1669,36 @@
                         modal.remove();
                     }
                 });
+                // Setup shortlist button handler inside the modal
+                const modalPrimaryBtn = document.getElementById('modal-shortlist-primary-btn');
+                const modalSecondaryBtn = document.getElementById('modal-shortlist-secondary-btn');
+                if (modalPrimaryBtn) {
+                    modalPrimaryBtn.addEventListener('click', async () => {
+                        try {
+                            await adminDashboard.shortlistApplication(app.id, 'primary');
+                            alert('Shortlisted for primary: ' + (app.departmentPrimary || 'Primary'));
+                            modal.remove();
+                        } catch (err) {
+                            console.error('Modal shortlist error', err);
+                            alert('Failed to shortlist. See console for details.');
+                        }
+                    });
+                }
+                if (modalSecondaryBtn) {
+                    modalSecondaryBtn.addEventListener('click', async () => {
+                        try {
+                            await adminDashboard.shortlistApplication(app.id, 'secondary');
+                            alert('Shortlisted for secondary: ' + (app.departmentSecondary || 'Secondary'));
+                            modal.remove();
+                        } catch (err) {
+                            console.error('Modal shortlist error', err);
+                            alert('Failed to shortlist. See console for details.');
+                        }
+                    });
+                }
             }
 
-            async shortlistApplication(appId) {
+            async shortlistApplication(appId, dept) {
                 try {
                     const app = this.applications.find(a => a.id === appId);
                     if (!app) {
@@ -1672,35 +1706,51 @@
                         return;
                     }
 
-                    // Confirm action
-                    if (!confirm(`Are you sure you want to shortlist ${app.firstName} ${app.lastName}?`)) {
-                        return;
+                    // Determine departments to shortlist for
+                    let departments = [];
+                    if (Array.isArray(dept)) departments = dept.slice();
+                    else if (typeof dept === 'string') departments = [dept];
+                    else {
+                        // default: shortlist for both if unknown
+                        departments = ['primary','secondary'];
                     }
 
-                    console.log('Attempting to shortlist application:', appId);
-                    console.log('Current user:', this.currentUser?.email);
+                    // Map department keys to readable values
+                    const reviewedFor = [];
+                    if (departments.includes('primary') && app.departmentPrimary) reviewedFor.push(app.departmentPrimary);
+                    if (departments.includes('secondary') && app.departmentSecondary) reviewedFor.push(app.departmentSecondary);
+                    if (reviewedFor.length === 0) {
+                        // Fallback: mark as general shortlisted
+                        reviewedFor.push('general');
+                    }
 
-                    // Add to shortlisted collection in Firebase using v9 SDK
+                    // Confirm action with departments listed
+                    if (!confirm(`Shortlist ${app.firstName} ${app.lastName} for: ${reviewedFor.join(', ')} ?`)) return;
+
+                    console.log('Attempting to shortlist application:', appId, 'for', reviewedFor);
+
                     const shortlistedRef = window.firebase.doc(window.firebase.db, 'shortlisted', appId);
                     await window.firebase.setDoc(shortlistedRef, {
                         ...app,
                         reviewStatus: 'shortlisted',
                         reviewedAt: window.firebase.serverTimestamp(),
-                        reviewedBy: this.currentUser.email
+                        reviewedBy: this.currentUser.email,
+                        reviewedFor: reviewedFor
                     });
 
                     console.log('Successfully added to shortlisted collection');
 
-                    // Update the local application status and reviewer info
+                    // Update the local application status and reviewer info (mark as shortlisted)
                     app.reviewStatus = 'shortlisted';
                     app.reviewedBy = this.currentUser.email;
                     app.reviewedAt = new Date();
+                    app.reviewedFor = reviewedFor;
 
                     // Refresh the table
                     this.renderApplicationsTable();
                     this.updateStats();
 
-                    alert(`Successfully shortlisted ${app.firstName} ${app.lastName}`);
+                    alert(`Successfully shortlisted ${app.firstName} ${app.lastName} for ${reviewedFor.join(', ')}`);
 
                 } catch (error) {
                     console.error('Error shortlisting application:', error);
@@ -1715,7 +1765,7 @@
                 }
             }
 
-            async rejectApplication(appId) {
+            async rejectApplication(appId, dept) {
                 try {
                     const app = this.applications.find(a => a.id === appId);
                     if (!app) {
@@ -1731,13 +1781,25 @@
                     console.log('Attempting to reject application:', appId);
                     console.log('Current user:', this.currentUser?.email);
 
+                    // Determine departments for rejection if provided
+                    let departments = [];
+                    if (Array.isArray(dept)) departments = dept.slice();
+                    else if (typeof dept === 'string') departments = [dept];
+                    else departments = ['primary','secondary'];
+
+                    const reviewedFor = [];
+                    if (departments.includes('primary') && app.departmentPrimary) reviewedFor.push(app.departmentPrimary);
+                    if (departments.includes('secondary') && app.departmentSecondary) reviewedFor.push(app.departmentSecondary);
+                    if (reviewedFor.length === 0) reviewedFor.push('general');
+
                     // Add to rejected collection in Firebase using v9 SDK
                     const rejectedRef = window.firebase.doc(window.firebase.db, 'rejected', appId);
                     await window.firebase.setDoc(rejectedRef, {
                         ...app,
                         reviewStatus: 'rejected',
                         reviewedAt: window.firebase.serverTimestamp(),
-                        reviewedBy: this.currentUser.email
+                        reviewedBy: this.currentUser.email,
+                        reviewedFor: reviewedFor
                     });
 
                     console.log('Successfully added to rejected collection');
@@ -1746,6 +1808,7 @@
                     app.reviewStatus = 'rejected';
                     app.reviewedBy = this.currentUser.email;
                     app.reviewedAt = new Date();
+                    app.reviewedFor = reviewedFor;
 
                     // Refresh the table
                     this.renderApplicationsTable();
