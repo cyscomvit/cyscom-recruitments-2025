@@ -646,9 +646,9 @@
                     <div class="label">All time submissions</div>
                 </div>
                 <div class="dashboard-card">
-                    <h3>Today's Applications</h3>
+                    <h3>Unreviewed</h3>
                     <div class="number" id="today-applications">-</div>
-                    <div class="label">New submissions today</div>
+                    <div class="label">Applications pending review</div>
                 </div>
                 <div class="dashboard-card">
                     <h3>Shortlisted</h3>
@@ -1305,10 +1305,8 @@
 
             updateStats() {
                 const total = this.applications.length;
-                const today = new Date().toDateString();
-                const todayCount = this.applications.filter(app => 
-                    app.timestamp && new Date(app.timestamp.seconds * 1000).toDateString() === today
-                ).length;
+                // Unreviewed count = applications still marked as 'new'
+                const unreviewedCount = this.applications.filter(app => (app.reviewStatus || 'new') === 'new').length;
 
                 const weekStart = new Date();
                 weekStart.setDate(weekStart.getDate() - 7);
@@ -1317,7 +1315,7 @@
                 ).length;
 
                 document.getElementById('total-applications').textContent = total;
-                document.getElementById('today-applications').textContent = todayCount;
+                document.getElementById('today-applications').textContent = unreviewedCount;
                 document.getElementById('week-applications').textContent = weekCount;
                 document.getElementById('shortlisted-count').textContent = this.applications.filter(app => app.reviewStatus === 'shortlisted').length;
             }
