@@ -1592,6 +1592,10 @@
                             const s = data.departmentSecondary || data.department_secondary || data.secondaryDepartment || data.secondary || null;
                             if (p) userDepartments.push(String(p).trim().toLowerCase());
                             if (s) userDepartments.push(String(s).trim().toLowerCase());
+                            // Also update immutable display for departments
+                            if (typeof setUserDepartmentsDisplay === 'function') {
+                                setUserDepartmentsDisplay(p, s);
+                            }
                         }
                     } catch (e) {
                         userDepartments = [];
@@ -1603,6 +1607,12 @@
                     // Load slot counts and apply department filter so the UI only enables matching slots
                     if (typeof loadSlotCounts === 'function') {
                         setTimeout(() => loadSlotCounts(), 200); // call without args so it uses the persisted value
+                    }
+                    // If preferredDepartments array path used, still show display
+                    if (!data.departmentPrimary && Array.isArray(data.preferredDepartments) && data.preferredDepartments.length > 0) {
+                        const p = data.preferredDepartments[0] || null;
+                        const s = data.preferredDepartments[1] || null;
+                        if (typeof setUserDepartmentsDisplay === 'function') setUserDepartmentsDisplay(p, s);
                     }
                     
                     
@@ -1648,6 +1658,11 @@
                             <span class="user-email">${user.email}</span>
                             <span class="auth-status">Verified</span>
                         </div>
+                        <div id="user-departments-display" style="margin-top:6px; font-size:0.8rem; color:#ccc; display:none;">
+                            <span style="opacity:0.8;">Departments:</span>
+                            <span class="dept-primary" style="font-weight:600; color:#fff;"></span>
+                            <span class="dept-secondary" style="margin-left:4px; color:#bbb;"></span>
+                        </div>
                         <button id="user-info-sign-out-btn" class="sign-out-btn">
                             <i class="ri-logout-box-line"></i>
                             <span>Sign Out</span>
@@ -1668,6 +1683,27 @@
                     if (userEmail) {
                         userEmail.textContent = user.email;
                     }
+                }
+            }
+
+            // Helper to set department display (immutable info section)
+            function setUserDepartmentsDisplay(primary, secondary) {
+                const container = document.getElementById('user-departments-display');
+                if (!container) return;
+                const pSpan = container.querySelector('.dept-primary');
+                const sSpan = container.querySelector('.dept-secondary');
+                if (primary) {
+                    pSpan.textContent = primary.toUpperCase();
+                } else {
+                    pSpan.textContent = '';
+                }
+                if (secondary && secondary !== primary) {
+                    sSpan.textContent = `| ${secondary.toUpperCase()}`;
+                } else {
+                    sSpan.textContent = '';
+                }
+                if (primary || secondary) {
+                    container.style.display = 'block';
                 }
             }
 
