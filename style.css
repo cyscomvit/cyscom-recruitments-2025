@@ -3560,6 +3560,26 @@ textarea:hover ~ #cursor {
     transform: translateY(0);
 }
 
+/* Shortlist notice styling */
+.shortlist-notice {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    padding: 18px;
+    margin-bottom: 18px;
+    border-radius: 10px;
+    color: #fff;
+}
+
+.shortlist-notice h3 {
+    margin: 0 0 6px 0;
+    font-size: 1.1rem;
+}
+
+.shortlist-notice p {
+    margin: 0;
+    opacity: 0.9;
+}
+
 .direct-google-auth-btn i {
     font-size: 18px;
 }

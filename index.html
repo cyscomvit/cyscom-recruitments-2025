@@ -428,9 +428,14 @@
                         </div>
                         
                         <div class="auth-content">
-                            <div style="padding:1rem 0; text-align:center; color:#333;">
-                                <strong>Applications are closed.</strong>
-                                <p style="margin:0.5rem 0 0 0; color:#666;">Sign-in is disabled while registrations are closed.</p>
+                            <button id="google-sign-in-btn" class="google-auth-btn">
+                                <i class="ri-google-line"></i>
+                                <span>Continue with Google</span>
+                            </button>
+                            
+                            <div class="auth-info">
+                                <p><i class="ri-information-line"></i> We use Google Sign-In to verify your identity and prevent spam applications.</p>
+                                <p><i class="ri-lock-line"></i> Your information is secure and will only be used for the application process.</p>
                             </div>
                         </div>
                         
@@ -456,17 +461,67 @@
             </div>
 
             <div id="recruitment-section">
-                <div style="display:flex; align-items:center; justify-content:center; padding:4rem 2rem;">
-                    <div class="closed-message" style="max-width:760px; width:100%; border-radius:12px; padding:2.5rem; text-align:center;">
-                        <b><h1 style="font-size: 3rem ;margin:0 0 .5rem 0; color:#07c5f5;">Registrations are now Closed</h2></b>
-                        <p style="color:#ffffff; font-size:1.05rem; margin:0 0 1rem 0;">Thank you for your interest — applications are now closed.</p>
-                        <p style="color:#ffffff; margin:0 0 1rem 0;">Follow our social channels for results.</p>
-                    </div>
+                <div id="recruitment-header">
+                    <h2>SELECT INTERVIEW TIMESLOT</h2>
+                    <h3>Shortlisted Candidates can select their preferred timeslot for interview round.</h3>
+                    <!-- <h4>PLEASE SELECT YOUR SLOT BEFORE 12TH SEPTEMBER 20:00 HRS</h4> -->
+                    <p>Sign in to check if you were shortlisted.</p>
+                </div>
+                
+                <!-- Recruitment Form -->
+                <div id="recruitment-form-container">
+                    <form id="recruitment-form" method="post" action="#" onsubmit="return false;" novalidate>
+                        <!-- Interview Slot Selection (shortlisted candidates only) -->
+                        <div class="form-section">
+                            <h4>Select an Interview Time Slot</h4>
+                            <p id="slot-instructions" style="color: #666; font-size: 0.95rem; margin-bottom: 12px;">As a shortlisted candidate, please choose one time slot for your interview. Submitting will update your entry in the shortlisted list.</p>
+                            <p id="slot-summary" style="color: #ddd; font-size: 0.9rem; margin-bottom: 16px;">Loading slot availability...</p>
+
+                            <div class="form-group">
+                                <label for="timeSlot">Available Time Slots <span class="required">*</span></label>
+                                <select style="color: white; background-color: #013066;" id="timeSlot" name="timeSlot" required>
+                                    <option value="">-- Select a preferred slot --</option>
+                                    <option value="2025-09-12_21:00-23:00">Sept 12, 2025 — 21:00–23:00</option>
+                                    <option value="2025-09-13_10:00-12:30">Sept 13, 2025 — 10:00–12:30</option>
+                                    <option value="2025-09-13_21:00-23:30">Sept 13, 2025 — 21:00-23:30</option>
+                                    <option value="2025-09-14_10:00-12:30">Sept 13, 2025 — 10:00-12:30</option>
+                                    <option value="2025-09-14_21:00-22:30">Sept 14, 2025 — 21:00-22:30</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="slotNote">Optional note (e.g., unavailability)</label>
+                                <input type="text" style="color: white; background-color: #013066;" id="slotNote" name="slotNote" placeholder="Short note (optional)">
+                            </div>
+                        </div>
+
+                        <!-- Honeypot for bots -->
+                        <div style="position: absolute; left: -9999px; visibility: hidden;">
+                            <input type="text" name="website" tabindex="-1" autocomplete="off" />
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" id="submit-btn" class="submit-button">
+                                <span class="btn-text">Submit Slot</span>
+                                <span class="loading-spinner" style="display: none;">
+                                    <i class="ri-loader-4-line"></i>
+                                </span>
+                            </button>
+                        </div>
+                    </form>
                 </div>
 
-                <!-- Hidden dummy form + submit button to prevent JS errors from scripts that expect these elements -->
-                <form id="recruitment-form" style="display:none; visibility:hidden;" aria-hidden="true"></form>
-                <button id="submit-btn" type="button" style="display:none; visibility:hidden;" aria-hidden="true"></button>
+                <!-- Success/Error Messages -->
+                <div id="form-messages" style="display: none;">
+                    <div id="success-message" class="message success-msg" style="display: none;">
+                        <p>Thank you for your interest in CYSCOM. We'll review your application and get back to you soon. Join the below WhatsApp group for updates.</p>
+                    </div>
+                    
+                    <div id="error-message" class="message error-msg" style="display: none;">
+                        <h4>Submission Failed</h4>
+                        <p>There was an error submitting your application. Please try again.</p>
+                    </div>
+                </div>
             </div>
             <hr>
         </div>
@@ -1268,6 +1323,27 @@
                 }
             }
 
+            // Shortlist-specific notice helpers
+            function addShortlistNotice() {
+                const recruitmentSection = document.getElementById('recruitment-section');
+                let existing = document.getElementById('shortlist-notice');
+                if (existing) return;
+                const notice = document.createElement('div');
+                notice.id = 'shortlist-notice';
+                notice.className = 'shortlist-notice';
+                notice.innerHTML = `
+                    <h3>Sorry but you were not shortlisted for the interview round</h3>
+                    <p>If you have any queries, please contact the recruitment team via our WhatsApp group.</p>
+                `;
+                const formContainer = document.getElementById('recruitment-form-container');
+                recruitmentSection.insertBefore(notice, formContainer);
+            }
+
+            function removeShortlistNotice() {
+                const existing = document.getElementById('shortlist-notice');
+                if (existing) existing.remove();
+            }
+
             function addFormRestrictionNotice() {
                 const recruitmentSection = document.getElementById('recruitment-section');
                 let existingNotice = document.getElementById('form-restriction-notice');
@@ -1441,8 +1517,8 @@
                     // Store the document ID for later use
                     window.currentUserDocId = docId;
                     
-                    // Try to get the document directly by ID
-                    const docRef = window.firebase.doc(window.firebase.db, 'applications', docId);
+                    // Try to get the document directly by ID from the 'shortlisted' collection
+                    const docRef = window.firebase.doc(window.firebase.db, 'shortlisted', docId);
                     const docSnapshot = await window.firebase.getDoc(docRef);
                     
                     if (docSnapshot.exists()) {
@@ -1462,7 +1538,7 @@
                         if (submitBtn) {
                             const btnText = submitBtn.querySelector('.btn-text');
                             if (btnText) {
-                                btnText.textContent = 'Update Application';
+                                btnText.textContent = 'Confirm Slot';
                             }
                         // Show persistent WhatsApp contact for users with existing submissions
                         if (typeof window.showWhatsAppLink === 'function') {
@@ -1470,8 +1546,16 @@
                         }
                         }
                     } else {
-                        // New user - no existing submission
-                        
+                        // User is not in the shortlisted list - block access and show notice
+                        console.info('User not found in shortlisted:', userEmail);
+                        // Ensure any previously-visible existing-data UI is cleared
+                        removeFormRestrictionNotice();
+                        removeShortlistNotice();
+
+                        // Add a shortlist-specific notice and restrict the form
+                        addShortlistNotice();
+                        const recruitmentFormContainer = document.getElementById('recruitment-form-container');
+                        if (recruitmentFormContainer) recruitmentFormContainer.classList.add('form-restricted');
                     }
                     
                 } catch (error) {
@@ -1482,55 +1566,43 @@
 
             function populateFormWithExistingData(data) {
                 try {
-                    // Populate text inputs with correct field mapping
-                    const fieldMapping = {
-                        'firstName': 'firstName',
-                        'lastName': 'lastName',
-                        'regNumber': 'regNumber',        // Registration Number field ID
-                        'phone': 'phone',                // Phone Number field ID
-                        'year': 'year'                   // Academic Year field ID
-                    };
-                    
-                    Object.keys(fieldMapping).forEach(fieldId => {
-                        const dataKey = fieldMapping[fieldId];
-                        const input = document.getElementById(fieldId);
-                        if (input && data[dataKey]) {
-                            input.value = data[dataKey];
-                        }
-                    });
-                    
-                    // Populate textarea fields with correct field mapping
-                    const textareaMapping = {
-                        'skills': 'skills',
-                        'motivation': 'motivation',
-                        'contribution': 'contribution'
-                    };
-                    
-                    Object.keys(textareaMapping).forEach(fieldId => {
-                        const dataKey = textareaMapping[fieldId];
-                        const textarea = document.getElementById(fieldId);
-                        if (textarea && data[dataKey]) {
-                            textarea.value = data[dataKey];
-                        }
-                    });
-                    
-                    // Populate department selections
-                    if (data.departmentPrimary) {
-                        const primaryInput = document.getElementById('department-primary');
-                        if (primaryInput) {
-                            primaryInput.value = data.departmentPrimary;
-                        }
-                        // Update department selector display if needed
-                        updateDepartmentDisplay(data.departmentPrimary, 'primary');
+                    // Shortlist flow: populate interview slot and optional note if present
+                    const timeSlotInput = document.getElementById('timeSlot');
+                    if (timeSlotInput && data.interviewSlot) {
+                        timeSlotInput.value = data.interviewSlot;
                     }
-                    
-                    if (data.departmentSecondary) {
-                        const secondaryInput = document.getElementById('department-secondary');
-                        if (secondaryInput) {
-                            secondaryInput.value = data.departmentSecondary;
+
+                    const slotNote = document.getElementById('slotNote');
+                    if (slotNote && data.interviewNote) {
+                        slotNote.value = data.interviewNote;
+                    }
+
+                    // Remove any shortlist-notice and ensure the form is visible
+                    removeShortlistNotice();
+                    const recruitmentFormContainer = document.getElementById('recruitment-form-container');
+                    if (recruitmentFormContainer) recruitmentFormContainer.classList.remove('form-restricted');
+
+                    // Determine user's preferred departments (try multiple possible field names)
+                    let userDepartments = [];
+                    try {
+                        if (Array.isArray(data.preferredDepartments) && data.preferredDepartments.length > 0) {
+                            userDepartments = data.preferredDepartments.map(d => String(d).trim().toLowerCase());
+                        } else {
+                            const p = data.departmentPrimary || data.department_primary || data.primaryDepartment || data.primary || null;
+                            const s = data.departmentSecondary || data.department_secondary || data.secondaryDepartment || data.secondary || null;
+                            if (p) userDepartments.push(String(p).trim().toLowerCase());
+                            if (s) userDepartments.push(String(s).trim().toLowerCase());
                         }
-                        // Update department selector display if needed
-                        updateDepartmentDisplay(data.departmentSecondary, 'secondary');
+                    } catch (e) {
+                        userDepartments = [];
+                    }
+
+                    // Persist allowed departments globally so the filter is retained across actions
+                    window.currentUserAllowedDepartments = (userDepartments.length ? userDepartments : null);
+
+                    // Load slot counts and apply department filter so the UI only enables matching slots
+                    if (typeof loadSlotCounts === 'function') {
+                        setTimeout(() => loadSlotCounts(), 200); // call without args so it uses the persisted value
                     }
                     
                     
@@ -1606,40 +1678,30 @@
                 }
             }
 
+            // Proper sign-out handler
             async function signOutUser() {
                 try {
-                    console.log('Signing out...');
-                    
                     // Clear current user document ID
                     window.currentUserDocId = null;
-                    
-                    // Sign out from Firebase
-                    await window.firebase.signOut(window.firebase.auth);
-                    console.log('Sign out successful');
-                    
-                    // Clear form data for security
-                    const form = document.getElementById('recruitment-form');
-                    if (form) {
-                        form.reset();
-                        
-                        // Clear department selections
-                        const primaryInput = document.getElementById('department-primary');
-                        const secondaryInput = document.getElementById('department-secondary');
-                        if (primaryInput) primaryInput.value = '';
-                        if (secondaryInput) secondaryInput.value = '';
-                        
-                        // Trigger reset event for React component
-                        window.dispatchEvent(new CustomEvent('resetDepartmentSelector'));
+
+                    // Sign out from Firebase if available
+                    if (window.firebase && window.firebase.auth) {
+                        await window.firebase.signOut(window.firebase.auth);
                     }
-                    
-                    // Clear any stored authentication state
-                    localStorage.removeItem('firebase-auth-user');
-                    sessionStorage.removeItem('firebase-auth-user');
-                    
-                    showTemporaryMessage('Successfully signed out!', 'success');
-                    // Hide WhatsApp link on sign-out for privacy
+
+                    // Clear UI and form state
+                    resetFormData();
+                    removeUserInfoSection();
                     if (typeof window.hideWhatsAppLink === 'function') window.hideWhatsAppLink();
-                    
+
+                    // Clear persisted auth (best-effort)
+                    try { localStorage.removeItem('firebase-auth-user'); } catch(e){}
+                    try { sessionStorage.removeItem('firebase-auth-user'); } catch(e){}
+
+                    showTemporaryMessage('Successfully signed out!', 'success');
+
+                    // Refresh slot list without department filter
+                    if (typeof loadSlotCounts === 'function') setTimeout(() => loadSlotCounts(null), 200);
                 } catch (error) {
                     console.error('Sign out error:', error);
                     showTemporaryMessage('Sign out failed. Please try again.', 'error');
@@ -1965,79 +2027,205 @@
                     // Submit to Firebase (if configured)
                     if (window.firebase && window.firebase.db) {
                         try {
-                            // Use the consistent document ID based on user's email
-                            const docId = window.currentUserDocId || await hashEmail(applicationData.email);
-                            
-                            
-                            // Create document reference
-                            const docRef = window.firebase.doc(window.firebase.db, 'applications', docId);
-                            
-                            // Check if document exists to determine if it's an update
+                            // Use the consistent document ID based on the authenticated user's email
+                            const docId = window.currentUserDocId || await hashEmail(applicationData.authenticatedUser.email);
+
+                            // Create reference to shortlisted document and merge the selected slot
+                            const docRef = window.firebase.doc(window.firebase.db, 'shortlisted', docId);
                             const existingDoc = await window.firebase.getDoc(docRef);
                             const isUpdate = existingDoc.exists();
 
                             // Log the operation
-                            window.securityManager.logSecurityEvent(isUpdate ? 'FORM_UPDATE_INITIATED' : 'FORM_SUBMISSION_INITIATED', {
+                            window.securityManager.logSecurityEvent(isUpdate ? 'SLOT_UPDATE_INITIATED' : 'SLOT_SUBMISSION_INITIATED', {
                                 documentId: docId,
                                 applicationId: applicationData.applicationId,
-                                departmentPrimary: applicationData.departmentPrimary,
-                                departmentSecondary: applicationData.departmentSecondary,
+                                timeSlot: applicationData.timeSlot,
                                 isUpdate: isUpdate
                             });
 
-                            // Use setDoc to create or update the document with the specific ID
-                            await window.firebase.setDoc(docRef, {
-                                ...applicationData,
-                                ...(isUpdate ? { updatedAt: window.firebase.serverTimestamp() } : {}),
-                                createdAt: isUpdate ? existingDoc.data().createdAt : window.firebase.serverTimestamp()
-                            }, { merge: false }); // Don't merge - replace entire document
-                            
-                            
-                            // Store the document ID for future use
-                            window.currentUserDocId = docId;
-                            
-                            // Log successful submission
-                            window.securityManager.logSecurityEvent(isUpdate ? 'FORM_UPDATE_SUCCESS' : 'FORM_SUBMISSION_SUCCESS', {
-                                documentId: docId,
-                                applicationId: applicationData.applicationId,
-                                departmentPrimary: applicationData.departmentPrimary,
-                                departmentSecondary: applicationData.departmentSecondary,
-                                isUpdate: isUpdate
-                            });
+                            // Prepare data to merge into shortlisted document
+                            const slotPayload = {
+                                interviewSlot: applicationData.timeSlot,
+                                interviewNote: applicationData.slotNote || null,
+                                interviewSlotUpdatedAt: window.firebase.serverTimestamp ? window.firebase.serverTimestamp() : new Date().toISOString(),
+                                interviewUpdatedBy: applicationData.authenticatedUser?.email || null
+                            };
 
-                            // Show success message
-                            showSuccess(isUpdate);
-                            
-                            // Update submit button text for future submissions
-                            const submitBtn = document.querySelector('button[type="submit"]');
-                            if (submitBtn) {
-                                const btnText = submitBtn.querySelector('.btn-text');
-                                if (btnText) {
-                                    btnText.textContent = 'Update Application';
+                            // Preflight availability check: block booking if selected slot has 0 seats remaining
+                            try {
+                                const preSlotId = applicationData.timeSlot;
+                                const preSlotRef = window.firebase.doc(window.firebase.db, 'interviewSlots', preSlotId);
+                                const preSlotSnap = await window.firebase.getDoc(preSlotRef);
+                                if (!preSlotSnap.exists()) {
+                                    throw new Error('Selected slot does not exist');
+                                }
+                                const preRemaining = Number(preSlotSnap.data().remainingSeats || 0);
+                                const currentBookedSlot = isUpdate ? (existingDoc.data().interviewSlot || null) : null;
+                                const reconfirmingSame = currentBookedSlot && currentBookedSlot === preSlotId;
+                                if (preRemaining <= 0 && !reconfirmingSame) {
+                                    showError('Selected slot is full. Please choose another slot.');
+                                    if (typeof loadSlotCounts === 'function') await loadSlotCounts();
+                                    return;
+                                }
+                            } catch (preErr) {
+                                // Surface preflight errors early
+                                throw preErr;
+                            }
+
+                            // Attempt an atomic transaction to reserve the slot and update shortlisted doc
+                            if (typeof window.firebase.runTransaction === 'function') {
+                                await window.firebase.runTransaction(window.firebase.db, async (tx) => {
+                                    const slotId = applicationData.timeSlot;
+                                    const slotRef = window.firebase.doc(window.firebase.db, 'interviewSlots', slotId);
+                                    const slotSnap = await tx.get(slotRef);
+
+                                    if (!slotSnap.exists()) {
+                                        throw new Error('Selected slot does not exist');
+                                    }
+
+                                    const slotData = slotSnap.data();
+                                    const remaining = Number(slotData.remainingSeats || 0);
+
+                                    // Get current shortlisted document within the same transaction
+                                    const shortlistRef = docRef;
+                                    const shortlistSnap = await tx.get(shortlistRef);
+                                    const currentSlot = shortlistSnap.exists() ? shortlistSnap.data().interviewSlot : null;
+
+                                    // If changing slots, ensure target has availability; if re-confirming same slot, allow updating note
+                                    if (currentSlot === slotId) {
+                                        // Only update the shortlisted doc (note/timestamps)
+                                        if (shortlistSnap.exists()) {
+                                            tx.update(shortlistRef, slotPayload);
+                                        } else {
+                                            tx.set(shortlistRef, slotPayload);
+                                        }
+                                        return;
+                                    }
+
+                                    if (remaining <= 0) {
+                                        throw new Error('No seats remaining for the selected slot');
+                                    }
+
+                                    // Decrement target slot
+                                    tx.update(slotRef, { remainingSeats: remaining - 1 });
+
+                                    // If user had a previous slot, increment its counter
+                                    if (currentSlot) {
+                                        const prevRef = window.firebase.doc(window.firebase.db, 'interviewSlots', currentSlot);
+                                        const prevSnap = await tx.get(prevRef);
+                                        if (prevSnap.exists()) {
+                                            const prevRem = Number(prevSnap.data().remainingSeats || 0);
+                                            tx.update(prevRef, { remainingSeats: prevRem + 1 });
+                                        }
+                                    }
+
+                                    // Update shortlisted doc with the new slot info
+                                    if (shortlistSnap.exists()) {
+                                        tx.update(shortlistRef, slotPayload);
+                                    } else {
+                                        tx.set(shortlistRef, slotPayload);
+                                    }
+                                });
+
+                                // Refresh local slot counts UI after successful transaction
+                                if (typeof loadSlotCounts === 'function') await loadSlotCounts();
+
+                                // Store the document ID for future use
+                                window.currentUserDocId = docId;
+
+                                // Log successful submission
+                                window.securityManager.logSecurityEvent(isUpdate ? 'FORM_UPDATE_SUCCESS' : 'FORM_SUBMISSION_SUCCESS', {
+                                    documentId: docId,
+                                    applicationId: applicationData.applicationId,
+                                    timeSlot: applicationData.timeSlot,
+                                    isUpdate: isUpdate
+                                });
+
+                                // Show success message
+                                showSuccess(isUpdate);
+
+                                // Update submit button text for future submissions
+                                const submitBtn = document.querySelector('button[type="submit"]');
+                                if (submitBtn) {
+                                    const btnText = submitBtn.querySelector('.btn-text');
+                                    if (btnText) {
+                                        btnText.textContent = 'Confirm Slot';
+                                    }
+                                }
+
+                                // Show persistent WhatsApp contact after successful submission/update
+                                if (typeof window.showWhatsAppLink === 'function') {
+                                    window.showWhatsAppLink({ docId });
+                                }
+
+                                // Update rate limiting
+                                lastSubmissionTime = currentTime;
+
+                                return; // Success complete
+                            } else {
+                                // Fallback: if runTransaction is not available, perform a best-effort update
+                                // Attempt to decrement the target slot and increment the previous slot (if any)
+                                try {
+                                    const slotId = applicationData.timeSlot;
+                                    const slotRef = window.firebase.doc(window.firebase.db, 'interviewSlots', slotId);
+                                    const slotSnap = await window.firebase.getDoc(slotRef);
+
+                                    if (!slotSnap.exists()) {
+                                        throw new Error('Selected slot does not exist');
+                                    }
+
+                                    const slotData = slotSnap.data();
+                                    const remaining = Number(slotData.remainingSeats || 0);
+
+                                    // Read current shortlisted doc to determine previous slot
+                                    const shortlistSnap = await window.firebase.getDoc(docRef);
+                                    const currentSlot = shortlistSnap.exists() ? shortlistSnap.data().interviewSlot : null;
+
+                                    if (currentSlot === slotId) {
+                                        // Re-confirming same slot: only update shortlisted doc
+                                        await window.firebase.setDoc(docRef, slotPayload, { merge: true });
+                                    } else {
+                                        if (remaining <= 0) {
+                                            throw new Error('No seats remaining for the selected slot');
+                                        }
+
+                                        // Decrement target slot (best-effort)
+                                        if (typeof window.firebase.updateDoc === 'function') {
+                                            await window.firebase.updateDoc(slotRef, { remainingSeats: remaining - 1 });
+                                        } else {
+                                            // Fallback to set with merged value
+                                            await window.firebase.setDoc(slotRef, { remainingSeats: remaining - 1 }, { merge: true });
+                                        }
+
+                                        // If user had a previous slot, increment its counter (best-effort)
+                                        if (currentSlot) {
+                                            const prevRef = window.firebase.doc(window.firebase.db, 'interviewSlots', currentSlot);
+                                            const prevSnap = await window.firebase.getDoc(prevRef);
+                                            if (prevSnap.exists()) {
+                                                const prevRem = Number(prevSnap.data().remainingSeats || 0);
+                                                if (typeof window.firebase.updateDoc === 'function') {
+                                                    await window.firebase.updateDoc(prevRef, { remainingSeats: prevRem + 1 });
+                                                } else {
+                                                    await window.firebase.setDoc(prevRef, { remainingSeats: prevRem + 1 }, { merge: true });
+                                                }
+                                            }
+                                        }
+
+                                        // Update shortlisted doc with the new slot info
+                                        await window.firebase.setDoc(docRef, slotPayload, { merge: true });
+                                    }
+
+                                    window.currentUserDocId = docId;
+                                    window.securityManager.logSecurityEvent('FORM_SUBMISSION_SUCCESS_NO_TX', { documentId: docId, applicationId: applicationData.applicationId });
+                                    showSuccess(isUpdate);
+                                    if (typeof loadSlotCounts === 'function') await loadSlotCounts();
+                                    lastSubmissionTime = currentTime;
+                                    return;
+                                } catch (fallbackErr) {
+                                    // Re-throw to be handled by outer catch which already maps errors to user messages
+                                    throw fallbackErr;
                                 }
                             }
-                            // Show persistent WhatsApp contact after successful submission/update
-                            if (typeof window.showWhatsAppLink === 'function') {
-                                window.showWhatsAppLink({ docId });
-                            }
-                            
-                            // Don't reset form - let user continue editing
-                            
-                            // Clear department selections
-                            const departmentOptions = document.querySelectorAll('.department-option');
-                            departmentOptions.forEach(opt => opt.classList.remove('selected'));
-                            
-                            // Clear hidden department fields
-                            document.getElementById('department-primary').value = '';
-                            document.getElementById('department-secondary').value = '';
-                            
-                            // Trigger reset event for React component
-                            window.dispatchEvent(new CustomEvent('resetDepartmentSelector'));
-                            
-                            // Update rate limiting
-                            lastSubmissionTime = currentTime;
-                            
-                            return; // Success complete
                             
                         } catch (firebaseError) {
                             console.error('Firebase submission error:', firebaseError);
@@ -2050,7 +2238,15 @@
                             });
                             
                             // Show specific Firebase error or fallback to generic message
-                            if (firebaseError.code === 'permission-denied') {
+                            const msg = (firebaseError && firebaseError.message) ? String(firebaseError.message).toLowerCase() : '';
+                            if (msg.includes('no seats remaining') || msg.includes('no seats') || msg.includes('no seats remaining for the selected slot') ) {
+                                showError('Selected slot is full. Please choose another slot.');
+                                // refresh counts
+                                if (typeof loadSlotCounts === 'function') loadSlotCounts();
+                            } else if (msg.includes('selected slot does not exist') || msg.includes('slot does not exist')) {
+                                showError('Selected slot not found. Please refresh and try again.');
+                                if (typeof loadSlotCounts === 'function') loadSlotCounts();
+                            } else if (firebaseError.code === 'permission-denied') {
                                 showError('Permission denied. Please check Firestore security rules.');
                             } else if (firebaseError.code === 'unavailable') {
                                 showError('Firebase service unavailable. Please try again later.');
@@ -2086,88 +2282,27 @@
             // Helper function to determine sanitization type
             function getSanitizationType(fieldName) {
                 switch (fieldName) {
-                    case 'firstName':
-                    case 'lastName':
-                        return 'name';
-                    case 'email':
-                        return 'email';
-                    case 'phone':
-                        return 'phone';
-                    case 'regNumber':
-                        return 'regNumber';
-                    case 'departmentPrimary':
-                    case 'departmentSecondary':
-                        return 'department';
-                    case 'skills':
-                    case 'motivation':
-                    case 'contribution':
+                    case 'timeSlot':
+                        return 'default';
+                    case 'slotNote':
                         return 'text';
                     default:
                         return 'default';
                 }
             }
 
-            // Enhanced validation function using security manager
+            // Enhanced validation function using security manager (now only validates time slot)
             function performBasicValidation(applicationData) {
                 const errors = [];
-                
-                // Basic validation rules
-                const requiredFields = {
-                    firstName: 'First Name',
-                    lastName: 'Last Name', 
-                    email: 'Email',
-                    phone: 'Phone Number',
-                    regNumber: 'Registration Number',
-                    departmentPrimary: 'Primary Department (1st Preference)',
-                    departmentSecondary: 'Secondary Department (2nd Preference)',
-                    skills: 'Skills',
-                    motivation: 'Motivation',
-                    contribution: 'Creativity'
-                };
 
-                // Check required fields
-                for (const [fieldName, displayName] of Object.entries(requiredFields)) {
-                    if (!applicationData[fieldName] || applicationData[fieldName].trim() === '') {
-                        errors.push(`${displayName} is required`);
-                    }
+                // Only the interview time slot is required
+                if (!applicationData.timeSlot || String(applicationData.timeSlot).trim() === '') {
+                    errors.push('Please select an interview time slot');
                 }
 
-                // Specific department validation
-                const primaryDept = applicationData.departmentPrimary?.trim();
-                const secondaryDept = applicationData.departmentSecondary?.trim();
-                
-                if (!primaryDept) {
-                    errors.push('Please select your 1st preference department');
-                }
-                
-                if (!secondaryDept) {
-                    errors.push('Please select your 2nd preference department');
-                }
-                
-                // Ensure different departments are selected
-                if (primaryDept && secondaryDept && primaryDept === secondaryDept) {
-                    errors.push('Primary and Secondary departments must be different');
-                }
-
-                // Basic email validation
-                if (applicationData.email) {
-                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                    if (!emailRegex.test(applicationData.email)) {
-                        errors.push('Please enter a valid email address');
-                    }
-                }
-
-                // Check minimum lengths for text fields
-                if (applicationData.skills && applicationData.skills.trim().length < 10) {
-                    errors.push('Skills description should be at least 10 characters');
-                }
-                
-                if (applicationData.motivation && applicationData.motivation.trim().length < 10) {
-                    errors.push('Motivation should be at least 10 characters');
-                }
-
-                if (applicationData.contribution && applicationData.contribution.trim().length < 2) {
-                    errors.push('Please describe cybersecurity in your own terms');
+                // Optionally ensure slotNote is reasonably short
+                if (applicationData.slotNote && String(applicationData.slotNote).length > 300) {
+                    errors.push('Optional note is too long (max 300 characters)');
                 }
 
                 return errors;
@@ -2176,6 +2311,207 @@
             function generateApplicationId() {
                 return 'APP_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9).toUpperCase();
             }
+
+            // Load slot counts from 'interviewSlots' collection and update the select UI
+            async function loadSlotCounts(allowedDepartments = null) {
+                try {
+                    if (!window.firebase || !window.firebase.db) return;
+                    const select = document.getElementById('timeSlot');
+                    if (!select) return;
+
+                    // Get all slots documents
+                    const slotsCol = window.firebase.collection(window.firebase.db, 'interviewSlots');
+                    const snap = await window.firebase.getDocs(slotsCol);
+                    const slotMap = {};
+                    snap.forEach(doc => {
+                        const data = doc.data();
+                        slotMap[doc.id] = {
+                            remaining: Number(data.remainingSeats || 0),
+                            label: data.label || doc.id
+                        };
+                    });
+
+                    // If no explicit allowedDepartments passed, use persisted global so filter persists
+                    if ((!Array.isArray(allowedDepartments) || allowedDepartments.length === 0) && Array.isArray(window.currentUserAllowedDepartments)) {
+                        allowedDepartments = window.currentUserAllowedDepartments;
+                    }
+
+                   const deptComboToSlots = {
+                    'dev+technical': [
+                        '2025-09-12_21:00-23:00',
+                        '2025-09-13_10:00-12:30',
+                        '2025-09-13_21:00-23:30',
+                        '2025-09-14_10:00-12:30',
+                        '2025-09-14_21:00-22:30'
+                    ],
+
+                    'event-management+technical': [
+                        '2025-09-12_21:00-23:00',
+                        '2025-09-13_21:00-23:30',
+                        '2025-09-14_21:00-22:30'
+                    ],
+
+                    'content+dev': [
+                        '2025-09-12_21:00-23:00',
+                        '2025-09-14_21:00-22:30'
+                    ],
+
+                    'dev+social-media': [
+                        '2025-09-12_21:00-23:00',
+                        '2025-09-14_21:00-22:30'
+                    ],
+
+                    'content+social-media': [
+                        '2025-09-12_21:00-23:00',
+                        '2025-09-14_21:00-22:30'
+                    ],
+
+                    'design+dev': [
+                        '2025-09-14_21:00-22:30'
+                    ],
+
+                    'design+event-management': [
+                        '2025-09-14_21:00-22:30'
+                    ],
+
+                    'content+design': [
+                        '2025-09-14_21:00-22:30',
+                        '2025-09-13_10:00-12:30'
+                    ],
+
+                    'content+event-management': [
+                        '2025-09-14_21:00-22:30'
+                    ],
+
+                    'dev+event-management': [
+                        '2025-09-14_10:00-12:30',
+                        '2025-09-14_21:00-22:30'
+                    ],
+
+                    'event-management+social-media': [
+                        '2025-09-14_10:00-12:30',
+                        '2025-09-14_21:00-22:30'
+                    ],
+
+                    'design+technical': [
+                        '2025-09-14_10:00-12:30',
+                        '2025-09-14_21:00-22:30'
+                    ],
+
+                    'content+technical': [
+                        '2025-09-14_10:00-12:30',
+                        '2025-09-14_21:00-22:30'
+                    ],
+
+                    'design+social-media': [
+                        '2025-09-13_10:00-12:30',
+                        '2025-09-14_21:00-22:30'
+                    ],
+
+                    'technical+social-media': [
+                        '2025-09-13_21:00-23:30',
+                        '2025-09-14_21:00-22:30'
+                    ]
+                };
+
+                    // Compute allowedSlotIds from allowedDepartments (if provided)
+                    let allowedSlotIds = null; // null => all enabled
+                    let usingOverflowFallback = false;
+                    const FALLBACK_SLOT_ID = '2025-09-14_22:30-23:30';
+                    if (Array.isArray(allowedDepartments) && allowedDepartments.length > 0) {
+                        // normalize and sort department names
+                        const normalized = allowedDepartments.map(d => String(d).trim().toLowerCase().replace(/\s+/g, '')).sort().join('+');
+                        if (deptComboToSlots[normalized]) {
+                            const primaryAllowed = deptComboToSlots[normalized];
+                            allowedSlotIds = primaryAllowed.slice();
+                            // If all primary allowed slots are full (0 remaining), enable a special overflow slot just for this combo
+                            const allPrimaryFull = primaryAllowed.length > 0 && primaryAllowed.every(id => (slotMap[id]?.remaining || 0) <= 0);
+                            if (allPrimaryFull) {
+                                usingOverflowFallback = true;
+                                if (!allowedSlotIds.includes(FALLBACK_SLOT_ID)) {
+                                    allowedSlotIds.push(FALLBACK_SLOT_ID);
+                                }
+                            }
+                        } else {
+                            // Unknown combination: for now, leave all options enabled
+                            allowedSlotIds = null;
+                        }
+                    }
+
+                    // Ensure the fallback slot option exists only when using overflow fallback
+                    const existingFallbackOpt = Array.from(select.options).find(o => o.value === FALLBACK_SLOT_ID);
+                    if (usingOverflowFallback && slotMap[FALLBACK_SLOT_ID]) {
+                        if (!existingFallbackOpt) {
+                            const newOpt = document.createElement('option');
+                            newOpt.value = FALLBACK_SLOT_ID;
+                            newOpt.textContent = `${slotMap[FALLBACK_SLOT_ID].label} (${slotMap[FALLBACK_SLOT_ID].remaining} seats remain)`;
+                            newOpt.setAttribute('data-dynamic-fallback', 'true');
+                            select.appendChild(newOpt);
+                        }
+                    } else {
+                        // Remove dynamically added fallback option if present and not in use
+                        if (existingFallbackOpt && existingFallbackOpt.getAttribute('data-dynamic-fallback') === 'true') {
+                            existingFallbackOpt.remove();
+                        }
+                    }
+
+                    // Update each option's text to include remaining seats and enable/disable based on mapping
+                    const currentSelectedSlot = select.value || null;
+                    for (let i = 0; i < select.options.length; i++) {
+                        const opt = select.options[i];
+                        const id = opt.value;
+                        if (!id) continue;
+                        const info = slotMap[id];
+                        if (info) {
+                            const baseEnabled = (allowedSlotIds === null) ? true : allowedSlotIds.includes(id);
+                            // If slot is full (0 remaining), disable it unless it's the user's currently selected slot
+                            const isFull = (info.remaining <= 0);
+                            const enabled = baseEnabled && (!isFull || id === currentSelectedSlot);
+
+                            // Label with FULL badge when 0 remaining
+                            const labelSuffix = isFull ? ' — FULL' : ` (${info.remaining} seats remain)`;
+                            opt.textContent = `${info.label}${isFull ? labelSuffix : ` (${info.remaining} seats remain)`}`;
+
+                            opt.disabled = !enabled;
+                            opt.style.opacity = enabled ? '1' : '0.45';
+
+                            // Tooltip logic
+                            if (enabled && id === FALLBACK_SLOT_ID && usingOverflowFallback) {
+                                opt.title = 'Overflow availability (primary slots are full)';
+                            } else if (isFull && id !== currentSelectedSlot) {
+                                opt.title = 'Slot is FULL';
+                            } else if (baseEnabled) {
+                                opt.title = info.remaining + ' seats remain';
+                            } else {
+                                opt.title = 'Not available for your selected departments';
+                            }
+                        } else {
+                            opt.disabled = true;
+                            opt.style.opacity = '0.45';
+                            opt.title = 'Slot not available';
+                        }
+                    }
+
+                    // Update summary paragraph with concise availability
+                    const summary = document.getElementById('slot-summary');
+                    if (summary) {
+                        const parts = Object.keys(slotMap).map(k => {
+                            const s = slotMap[k];
+                            return `${s.label}: ${s.remaining}${s.remaining <= 0 ? ' (FULL)' : ''}`;
+                        });
+                        summary.textContent = 'Slots remaining : ' + parts.join(' || ');
+                    }
+                } catch (err) {
+                    console.error('Failed to load slot counts:', err);
+                }
+            }
+
+            // Initial load of slot counts when Firebase is ready
+            window.addEventListener('firebaseLoaded', () => {
+                setTimeout(() => {
+                    if (typeof loadSlotCounts === 'function') loadSlotCounts();
+                }, 200);
+            });
 
             // Generate privacy-friendly IP hash
             async function generateIPHash() {
@@ -2239,13 +2575,13 @@
                 const messageElement = successMessage.querySelector('h3') || successMessage.querySelector('p') || successMessage;
                 if (isUpdate) {
                     messageElement.innerHTML = `
-                        <h3>Application Updated Successfully!</h3>
-                        <p>Your application has been updated. You can continue editing at any time.</p>
+                        <h3>Slot Booked Successfully!</h3>
+                        <p>Exact timings for your interview would be shared on the Whatsapp group</p>
                     `;
                 } else {
                     messageElement.innerHTML = `
-                        <h3>Application Submitted Successfully!</h3>
-                        <p>Thank you for your application! You can sign in again to edit your responses if needed.</p>
+                        <h3>Slot Booked Successfully!</h3>
+                        <p>Exact timings for your interview would be shared on the Whatsapp group</p>
                     `;
                 }
                 

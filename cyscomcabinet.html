@@ -187,6 +187,49 @@
             width: 100%; /* Take full available width */
         }
 
+        /* Admin Tabs */
+        .admin-tabs {
+            display: flex;
+            gap: 8px;
+            margin: 0 0 16px 0;
+        }
+        .admin-tab-btn {
+            padding: 10px 16px;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #333;
+        }
+        .admin-tab-btn.active {
+            background: #667eea;
+            color: #fff;
+            border-color: #667eea;
+            box-shadow: 0 6px 18px rgba(102,126,234,0.25);
+        }
+
+        .slots-filters {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .slots-filters select,
+        .slots-filters input[type="text"] {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            background: #fff;
+            color: #333;
+        }
+        .slots-filters label { color: #fff; font-size: 14px; }
+
         /* Pagination controls */
         .pagination-controls {
             display: flex;
@@ -638,6 +681,11 @@
         </header>
 
         <main class="main-content">
+            <!-- Tabs -->
+            <div class="admin-tabs">
+                <button id="tab-btn-applications" class="admin-tab-btn active" data-tab="applications">Applications</button>
+                <button id="tab-btn-slots" class="admin-tab-btn" data-tab="slots">Slots</button>
+            </div>
             <!-- Dashboard Stats -->
             <div class="dashboard-grid">
                 <div class="dashboard-card">
@@ -662,12 +710,20 @@
                 </div>
             </div>
 
-            <!-- Applications Table -->
-            <div class="applications-section">
+            <!-- Applications Tab Content -->
+            <div id="tab-applications" class="applications-section">
                 <div class="section-header">
-                    <h2 class="section-title">Recent Applications</h2>
-                    <h2>&nbsp;&nbsp;&nbsp;&nbsp;</h2>
-                    <button id="export-btn" class="export-btn"> Export Data</button>
+                    <h2 class="section-title">Recent Applications &nbsp;&nbsp;&nbsp;</h2>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <label for="export-status-select" style="color:#fff; font-size:14px;"> Export:</label>
+                        <select id="export-status-select" class="status-filter" style="min-width:150px;">
+                            <option value="">All</option>
+                            <option value="shortlisted">Shortlisted</option>
+                            <option value="rejected">Rejected</option>
+                            <option value="new">New</option>
+                        </select>
+                        <button id="export-btn" class="export-btn"> Export Data</button>
+                    </div>
                 </div>
                 
                 <!-- Search and Filter Controls -->
@@ -779,6 +835,50 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Slots Tab Content -->
+            <div id="tab-slots" class="applications-section hidden">
+                <div class="section-header">
+                    <h2 class="section-title">Interview Slots (Shortlisted)&nbsp;&nbsp;</h2>
+                    <button id="export-slots-btn" class="export-btn"> Export Slots CSV</button>
+                </div>
+
+                <div class="slots-filters">
+                    <label>
+                        Slot:
+                        <select id="slot-filter-select">
+                            <option value="">All slots</option>
+                        </select>
+                    </label>
+                    <label>
+                        <input type="checkbox" id="only-missing-slot"> Only with no slot (NaN)
+                    </label>
+                    <input type="text" id="slot-search-input" placeholder="Search by name or email..." />
+                    <button id="clear-slot-filters" class="pagination-btn" type="button">Clear</button>
+                </div>
+
+                <div id="shortlisted-loading" class="loading">Loading shortlisted candidates...</div>
+
+                <div id="shortlisted-container" class="hidden">
+                    <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+                        <button id="sort-slots-btn" class="pagination-btn" title="Sort by slot">Sort by Slot ▲</button>
+                        <span id="shortlisted-count-label" class="pagination-info">0 candidates</span>
+                    </div>
+                    <table class="applications-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Departments</th>
+                                <th>Interview Slot</th>
+                                <th>Note</th>
+                                <th>Updated At</th>
+                            </tr>
+                        </thead>
+                        <tbody id="shortlisted-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
         </main>
     </div>
 
@@ -791,6 +891,12 @@
                 this.adminEmailsLoaded = false;
                 this.currentPage = 1;
                 this.entriesPerPage = 25; // Default entries per page
+                // Shortlisted + slots view state
+                this.shortlisted = [];
+                this.slotMap = {}; // id -> label
+                this.shortlistSortAsc = true;
+                this.activeTab = 'applications';
+                this.slotsFilters = { slotId: '', onlyMissing: false, search: '' };
                 this.init();
             }
 
@@ -841,10 +947,28 @@
                 this.userAvatar = document.getElementById('user-avatar');
                 this.userName = document.getElementById('user-name');
                 this.exportBtn = document.getElementById('export-btn');
+                this.exportStatusSelect = document.getElementById('export-status-select');
                 this.searchInput = document.getElementById('search-input');
                 this.secondaryDepartmentFilter = document.getElementById('secondary-department-filter');
                 this.primaryDepartmentFilter = document.getElementById('primary-department-filter');
                 this.statusFilter = document.getElementById('status-filter');
+                // Shortlisted section elements
+                this.shortlistedLoading = document.getElementById('shortlisted-loading');
+                this.shortlistedContainer = document.getElementById('shortlisted-container');
+                this.shortlistedTbody = document.getElementById('shortlisted-tbody');
+                this.exportSlotsBtn = document.getElementById('export-slots-btn');
+                this.sortSlotsBtn = document.getElementById('sort-slots-btn');
+                // Tabs
+                this.tabBtnApplications = document.getElementById('tab-btn-applications');
+                this.tabBtnSlots = document.getElementById('tab-btn-slots');
+                this.tabApplications = document.getElementById('tab-applications');
+                this.tabSlots = document.getElementById('tab-slots');
+                // Slots filters
+                this.slotFilterSelect = document.getElementById('slot-filter-select');
+                this.onlyMissingCheckbox = document.getElementById('only-missing-slot');
+                this.slotSearchInput = document.getElementById('slot-search-input');
+                this.clearSlotFiltersBtn = document.getElementById('clear-slot-filters');
+                this.shortlistedCountLabel = document.getElementById('shortlisted-count-label');
                 
                 // Pagination elements (will be created dynamically)
                 this.paginationContainer = null;
@@ -854,6 +978,21 @@
                 this.googleSigninBtn.addEventListener('click', () => this.signInWithGoogle());
                 this.signOutBtn.addEventListener('click', () => this.signOut());
                 this.exportBtn.addEventListener('click', () => this.exportApplications());
+                if (this.exportStatusSelect) this.exportStatusSelect.addEventListener('change', ()=>{});
+                if (this.exportSlotsBtn) this.exportSlotsBtn.addEventListener('click', () => this.exportShortlistedCSV());
+                if (this.sortSlotsBtn) this.sortSlotsBtn.addEventListener('click', () => {
+                    this.shortlistSortAsc = !this.shortlistSortAsc;
+                    if (this.sortSlotsBtn) this.sortSlotsBtn.textContent = `Sort by Slot ${this.shortlistSortAsc ? '▲' : '▼'}`;
+                    this.renderShortlistedTable();
+                });
+                // Tabs
+                if (this.tabBtnApplications) this.tabBtnApplications.addEventListener('click', () => this.switchTab('applications'));
+                if (this.tabBtnSlots) this.tabBtnSlots.addEventListener('click', () => this.switchTab('slots'));
+                // Filters
+                if (this.slotFilterSelect) this.slotFilterSelect.addEventListener('change', () => { this.slotsFilters.slotId = this.slotFilterSelect.value; this.renderShortlistedTable(); });
+                if (this.onlyMissingCheckbox) this.onlyMissingCheckbox.addEventListener('change', () => { this.slotsFilters.onlyMissing = !!this.onlyMissingCheckbox.checked; this.renderShortlistedTable(); });
+                if (this.slotSearchInput) this.slotSearchInput.addEventListener('input', () => { this.slotsFilters.search = this.slotSearchInput.value.trim().toLowerCase(); this.renderShortlistedTable(); });
+                if (this.clearSlotFiltersBtn) this.clearSlotFiltersBtn.addEventListener('click', () => { this.resetSlotFilters(); });
                 
                 // Search and filter event listeners
                 this.searchInput.addEventListener('input', () => this.filterAndResetPagination());
@@ -1101,6 +1240,16 @@
                     this.userAvatar.src = this.currentUser.photoURL || '';
                     this.userName.textContent = this.currentUser.displayName || this.currentUser.email;
                 }
+
+                // Load meta and shortlisted data when dashboard is shown
+                this.loadSlotsMeta();
+                this.loadShortlisted();
+
+                // Initialize tab from hash or storage
+                const hash = (location.hash || '').replace('#','');
+                const saved = localStorage.getItem('adminActiveTab');
+                const initial = (hash === 'slots' || saved === 'slots') ? 'slots' : 'applications';
+                this.switchTab(initial);
             }
 
             showError(message) {
@@ -1255,6 +1404,197 @@
                     });
                 } catch (error) {
                     console.error('❌ Error setting up real-time listener:', error);
+                }
+            }
+
+            async loadSlotsMeta() {
+                try {
+                    const ref = window.firebase.collection(window.firebase.db, 'interviewSlots');
+                    const snap = await window.firebase.getDocs(ref);
+                    this.slotMap = {};
+                    snap.forEach(d => {
+                        const data = d.data();
+                        this.slotMap[d.id] = data.label || d.id;
+                    });
+                    // Populate filter select
+                    const entries = Object.entries(this.slotMap).sort((a,b)=>a[1].localeCompare(b[1]));
+                    if (this.slotFilterSelect) {
+                        // Reset
+                        this.slotFilterSelect.innerHTML = '<option value="">All slots</option>';
+                        for (const [id,label] of entries) {
+                            const opt = document.createElement('option');
+                            opt.value = id;
+                            opt.textContent = label;
+                            this.slotFilterSelect.appendChild(opt);
+                        }
+                    }
+                } catch (err) {
+                    console.error('Failed to load slot metadata:', err);
+                }
+            }
+
+            loadShortlisted() {
+                try {
+                    const ref = window.firebase.collection(window.firebase.db, 'shortlisted');
+                    if (this._unsubscribeShortlisted) this._unsubscribeShortlisted();
+                    this._unsubscribeShortlisted = window.firebase.onSnapshot(ref, (querySnapshot) => {
+                        this.shortlisted = [];
+                        querySnapshot.forEach((doc) => {
+                            const data = doc.data() || {};
+                            this.shortlisted.push({ id: doc.id, ...data });
+                        });
+                        this.renderShortlistedTable();
+                    }, (error) => {
+                        console.error('Error loading shortlisted:', error);
+                        if (this.shortlistedLoading) this.shortlistedLoading.textContent = 'Failed to load shortlisted candidates';
+                    });
+                } catch (err) {
+                    console.error('Failed to set shortlisted listener:', err);
+                }
+            }
+
+            resetSlotFilters() {
+                this.slotsFilters = { slotId: '', onlyMissing: false, search: '' };
+                if (this.slotFilterSelect) this.slotFilterSelect.value = '';
+                if (this.onlyMissingCheckbox) this.onlyMissingCheckbox.checked = false;
+                if (this.slotSearchInput) this.slotSearchInput.value = '';
+                this.renderShortlistedTable();
+            }
+
+            getFilteredShortlisted() {
+                const { slotId, onlyMissing, search } = this.slotsFilters;
+                let arr = this.shortlisted.slice();
+                // filter by slot
+                if (onlyMissing) {
+                    arr = arr.filter(x => !x.interviewSlot);
+                } else if (slotId) {
+                    arr = arr.filter(x => x.interviewSlot === slotId);
+                }
+                // search by name/email
+                if (search) {
+                    arr = arr.filter(x => {
+                        const name = `${x.firstName || ''} ${x.lastName || ''}`.toLowerCase();
+                        const email = (x.email || x.authenticatedUser?.email || '').toLowerCase();
+                        return name.includes(search) || email.includes(search);
+                    });
+                }
+                return arr;
+            }
+
+            renderShortlistedTable() {
+                if (!this.shortlistedTbody) return;
+                this.shortlistedTbody.innerHTML = '';
+
+                // Sort by slot label (NaN at end) after filters
+                const items = this.getFilteredShortlisted();
+                const labelOf = (s) => (s && this.slotMap[s]) || (s || 'NaN');
+                items.sort((a, b) => {
+                    const la = a.interviewSlot ? labelOf(a.interviewSlot) : '~~~NaN'; // ensure NaN at end
+                    const lb = b.interviewSlot ? labelOf(b.interviewSlot) : '~~~NaN';
+                    const cmp = la.localeCompare(lb);
+                    return this.shortlistSortAsc ? cmp : -cmp;
+                });
+
+                if (items.length === 0) {
+                    this.shortlistedTbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:black; padding: 1.5rem;">No shortlisted candidates yet</td></tr>`;
+                } else {
+                    items.forEach(item => {
+                        const name = `${item.firstName || ''} ${item.lastName || ''}`.trim() || 'N/A';
+                        const email = item.email || item.authenticatedUser?.email || 'N/A';
+                        const deptP = item.departmentPrimary || item.department || 'N/A';
+                        const deptS = item.departmentSecondary || 'N/A';
+                        const deptStr = `1st: ${deptP}, 2nd: ${deptS}`;
+                        const slotId = item.interviewSlot || null;
+                        const slotLabel = slotId ? (this.slotMap[slotId] || slotId) : 'NaN';
+                        const note = item.interviewNote || '';
+                        let updatedAt = 'N/A';
+                        const ts = item.interviewSlotUpdatedAt || item.reviewedAt;
+                        if (ts) {
+                            if (ts.seconds) updatedAt = new Date(ts.seconds * 1000).toLocaleString();
+                            else if (typeof ts === 'string') updatedAt = new Date(ts).toLocaleString();
+                            else if (ts instanceof Date) updatedAt = ts.toLocaleString();
+                        }
+
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${name}</td>
+                            <td>${email}</td>
+                            <td>${deptStr}</td>
+                            <td>${slotLabel}${slotId ? ` <span style="color:#888; font-size:12px;">(${slotId})</span>` : ''}</td>
+                            <td>${note ? String(note).substring(0, 120) : ''}</td>
+                            <td>${updatedAt}</td>
+                        `;
+                        this.shortlistedTbody.appendChild(tr);
+                    });
+                }
+
+                if (this.shortlistedLoading) this.shortlistedLoading.classList.add('hidden');
+                if (this.shortlistedContainer) this.shortlistedContainer.classList.remove('hidden');
+                if (this.shortlistedCountLabel) this.shortlistedCountLabel.textContent = `${items.length} candidate${items.length === 1 ? '' : 's'}`;
+            }
+
+            exportShortlistedCSV() {
+                try {
+                    const headers = [
+                        'First Name','Last Name','Email','Department Primary','Department Secondary','Interview Slot ID','Interview Slot Label','Interview Note','Interview Updated At','Shortlisted Doc ID'
+                    ];
+                    const rows = this.getFilteredShortlisted().map(item => {
+                        const slotId = item.interviewSlot || 'NaN';
+                        const slotLabel = item.interviewSlot ? (this.slotMap[item.interviewSlot] || item.interviewSlot) : 'NaN';
+                        let updatedAt = '';
+                        const ts = item.interviewSlotUpdatedAt || item.reviewedAt;
+                        if (ts) {
+                            if (ts.seconds) updatedAt = new Date(ts.seconds * 1000).toISOString();
+                            else if (typeof ts === 'string') updatedAt = new Date(ts).toISOString();
+                            else if (ts instanceof Date) updatedAt = ts.toISOString();
+                        } else {
+                            updatedAt = '';
+                        }
+                        return [
+                            item.firstName || '',
+                            item.lastName || '',
+                            item.email || item.authenticatedUser?.email || '',
+                            item.departmentPrimary || item.department || '',
+                            item.departmentSecondary || '',
+                            slotId,
+                            slotLabel,
+                            item.interviewNote || '',
+                            updatedAt,
+                            item.id || ''
+                        ];
+                    });
+
+                    const csv = [headers, ...rows].map(r => r.map(f => `"${String(f).replace(/"/g, '""')}"`).join(',')).join('\n');
+                    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                    const link = document.createElement('a');
+                    const url = URL.createObjectURL(blob);
+                    link.setAttribute('href', url);
+                    link.setAttribute('download', `shortlisted_slots_${new Date().toISOString().split('T')[0]}.csv`);
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                } catch (err) {
+                    console.error('Export shortlisted CSV failed:', err);
+                    alert('Export failed. Please try again.');
+                }
+            }
+
+            switchTab(tab) {
+                this.activeTab = tab;
+                localStorage.setItem('adminActiveTab', tab);
+                if (tab === 'slots') {
+                    if (this.tabApplications) this.tabApplications.classList.add('hidden');
+                    if (this.tabSlots) this.tabSlots.classList.remove('hidden');
+                    if (this.tabBtnApplications) this.tabBtnApplications.classList.remove('active');
+                    if (this.tabBtnSlots) this.tabBtnSlots.classList.add('active');
+                    if (location.hash !== '#slots') history.replaceState(null, '', '#slots');
+                } else {
+                    if (this.tabSlots) this.tabSlots.classList.add('hidden');
+                    if (this.tabApplications) this.tabApplications.classList.remove('hidden');
+                    if (this.tabBtnSlots) this.tabBtnSlots.classList.remove('active');
+                    if (this.tabBtnApplications) this.tabBtnApplications.classList.add('active');
+                    if (location.hash) history.replaceState(null, '', ' ');
                 }
             }
 
@@ -1827,9 +2167,9 @@
                 }
             }
 
-            exportApplications() {
+        exportApplications() {
                 try {
-                    const csvContent = this.generateCSV();
+            const csvContent = this.generateCSV();
                     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
                     const link = document.createElement('a');
                     
@@ -1855,7 +2195,11 @@
                     'Review Status', 'Application ID', 'IP Hash', 'User Agent', 'Submission Time', 'Timestamp'
                 ];
                 
-                const rows = this.applications.map(app => {
+                // Filter by selected export status
+                const selectedStatus = (this.exportStatusSelect && this.exportStatusSelect.value) || '';
+                const data = (selectedStatus ? this.applications.filter(app => (app.reviewStatus || 'new') === selectedStatus) : this.applications);
+
+                const rows = data.map(app => {
                     // Handle timestamp formatting for CSV
                     let submitDate = '';
                     let submissionTime = '';
