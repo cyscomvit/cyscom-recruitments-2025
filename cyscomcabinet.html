@@ -840,7 +840,14 @@
             <div id="tab-slots" class="applications-section hidden">
                 <div class="section-header">
                     <h2 class="section-title">Interview Slots (Shortlisted)&nbsp;&nbsp;</h2>
-                    <button id="export-slots-btn" class="export-btn"> Export Slots CSV</button>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <label for="export-slot-select" style="color:#fff; font-size:14px;">Export Slot:</label>
+                        <select id="export-slot-select" class="status-filter" style="min-width:160px;">
+                            <option value="">All</option>
+                            <option value="__MISSING__">Missing (NaN)</option>
+                        </select>
+                        <button id="export-slots-btn" class="export-btn"> Export Slots CSV</button>
+                    </div>
                 </div>
 
                 <div class="slots-filters">
@@ -958,6 +965,7 @@
                 this.shortlistedTbody = document.getElementById('shortlisted-tbody');
                 this.exportSlotsBtn = document.getElementById('export-slots-btn');
                 this.sortSlotsBtn = document.getElementById('sort-slots-btn');
+                this.exportSlotSelect = document.getElementById('export-slot-select');
                 // Tabs
                 this.tabBtnApplications = document.getElementById('tab-btn-applications');
                 this.tabBtnSlots = document.getElementById('tab-btn-slots');
@@ -980,6 +988,7 @@
                 this.exportBtn.addEventListener('click', () => this.exportApplications());
                 if (this.exportStatusSelect) this.exportStatusSelect.addEventListener('change', ()=>{});
                 if (this.exportSlotsBtn) this.exportSlotsBtn.addEventListener('click', () => this.exportShortlistedCSV());
+                if (this.exportSlotSelect) this.exportSlotSelect.addEventListener('change', () => {/* no immediate action; used only on export */});
                 if (this.sortSlotsBtn) this.sortSlotsBtn.addEventListener('click', () => {
                     this.shortlistSortAsc = !this.shortlistSortAsc;
                     if (this.sortSlotsBtn) this.sortSlotsBtn.textContent = `Sort by Slot ${this.shortlistSortAsc ? '▲' : '▼'}`;
@@ -1428,6 +1437,21 @@
                             this.slotFilterSelect.appendChild(opt);
                         }
                     }
+                    // Populate export slot select
+                    if (this.exportSlotSelect) {
+                        const currentVal = this.exportSlotSelect.value;
+                        this.exportSlotSelect.innerHTML = '<option value="">All</option><option value="__MISSING__">Missing (NaN)</option>';
+                        for (const [id,label] of entries) {
+                            const opt = document.createElement('option');
+                            opt.value = id;
+                            opt.textContent = label;
+                            this.exportSlotSelect.appendChild(opt);
+                        }
+                        // preserve previous selection if still valid
+                        if ([...this.exportSlotSelect.options].some(o=>o.value===currentVal)) {
+                            this.exportSlotSelect.value = currentVal;
+                        }
+                    }
                 } catch (err) {
                     console.error('Failed to load slot metadata:', err);
                 }
@@ -1538,7 +1562,18 @@
                     const headers = [
                         'First Name','Last Name','Email','Department Primary','Department Secondary','Interview Slot ID','Interview Slot Label','Interview Note','Interview Updated At','Shortlisted Doc ID'
                     ];
-                    const rows = this.getFilteredShortlisted().map(item => {
+                    // Base dataset uses current table filters (slot/search/missing)
+                    let dataset = this.getFilteredShortlisted();
+                    // Apply export override if a specific export slot is selected
+                    const exportSlot = this.exportSlotSelect ? this.exportSlotSelect.value : '';
+                    if (exportSlot) {
+                        if (exportSlot === '__MISSING__') {
+                            dataset = dataset.filter(item => !item.interviewSlot);
+                        } else {
+                            dataset = dataset.filter(item => item.interviewSlot === exportSlot);
+                        }
+                    }
+                    const rows = dataset.map(item => {
                         const slotId = item.interviewSlot || 'NaN';
                         const slotLabel = item.interviewSlot ? (this.slotMap[item.interviewSlot] || item.interviewSlot) : 'NaN';
                         let updatedAt = '';
@@ -1569,7 +1604,11 @@
                     const link = document.createElement('a');
                     const url = URL.createObjectURL(blob);
                     link.setAttribute('href', url);
-                    link.setAttribute('download', `shortlisted_slots_${new Date().toISOString().split('T')[0]}.csv`);
+                    let exportSuffix = 'all';
+                    if (this.exportSlotSelect && this.exportSlotSelect.value) {
+                        exportSuffix = this.exportSlotSelect.value === '__MISSING__' ? 'missing' : this.exportSlotSelect.value;
+                    }
+                    link.setAttribute('download', `shortlisted_slots_${exportSuffix}_${new Date().toISOString().split('T')[0]}.csv`);
                     link.style.visibility = 'hidden';
                     document.body.appendChild(link);
                     link.click();
