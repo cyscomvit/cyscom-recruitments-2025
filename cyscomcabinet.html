@@ -195,17 +195,17 @@
         }
         .admin-tab-btn {
             padding: 10px 16px;
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
+            background: #645af0;
+            border: 1px solid #ffffff;
             border-radius: 10px;
             cursor: pointer;
             font-weight: 600;
-            color: #333;
+            color: #ffffff;
         }
         .admin-tab-btn.active {
-            background: #667eea;
-            color: #fff;
-            border-color: #667eea;
+            background: #ffffff;
+            color: #000000;
+            border-color: #000000;
             box-shadow: 0 6px 18px rgba(102,126,234,0.25);
         }
 
@@ -880,6 +880,7 @@
                                 <th>Interview Slot</th>
                                 <th>Note</th>
                                 <th>Updated At</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="shortlisted-tbody"></tbody>
@@ -1547,6 +1548,7 @@
                             <td>${slotLabel}${slotId ? ` <span style="color:#888; font-size:12px;">(${slotId})</span>` : ''}</td>
                             <td>${note ? String(note).substring(0, 120) : ''}</td>
                             <td>${updatedAt}</td>
+                            <td><button class="action-btn view-btn" style="padding:6px 10px;" onclick="adminDashboard.showShortlistedDetails('${item.id}')">View</button></td>
                         `;
                         this.shortlistedTbody.appendChild(tr);
                     });
@@ -1557,14 +1559,23 @@
                 if (this.shortlistedCountLabel) this.shortlistedCountLabel.textContent = `${items.length} candidate${items.length === 1 ? '' : 's'}`;
             }
 
-            exportShortlistedCSV() {
+            async exportShortlistedCSV() {
+                const btn = this.exportSlotsBtn;
                 try {
+                    if (btn) { btn.disabled = true; btn.textContent = 'Exporting…'; }
+
+                    // Updated headers including requested details
                     const headers = [
-                        'First Name','Last Name','Email','Department Primary','Department Secondary','Interview Slot ID','Interview Slot Label','Interview Note','Interview Updated At','Shortlisted Doc ID'
+                        'First Name','Last Name','Email','Phone','Registration Number',
+                        'Department Primary','Department Secondary',
+                        'Interview Slot ID','Interview Slot Label','Interview Note','Interview Updated At',
+                        'Skills','Motivation','Contribution','Shortlisted Doc ID'
                     ];
-                    // Base dataset uses current table filters (slot/search/missing)
-                    let dataset = this.getFilteredShortlisted();
-                    // Apply export override if a specific export slot is selected
+
+                    // Base dataset now ALWAYS starts from full shortlist to avoid empty exports due to on-screen filters
+                    let dataset = this.shortlisted.slice();
+
+                    // Apply export slot override if selected
                     const exportSlot = this.exportSlotSelect ? this.exportSlotSelect.value : '';
                     if (exportSlot) {
                         if (exportSlot === '__MISSING__') {
@@ -1573,33 +1584,75 @@
                             dataset = dataset.filter(item => item.interviewSlot === exportSlot);
                         }
                     }
+
+                    if (dataset.length === 0) {
+                        alert('No shortlisted records match the selected export criteria.');
+                        return;
+                    }
+
+                    // Fetch corresponding application docs to enrich missing fields (phone, regNumber, skills etc.)
+                    const db = window.firebase.db;
+                    const toFetch = dataset.filter(item => !(item.phone && item.regNumber && item.skills && item.motivation && item.contribution));
+                    const fetchedMap = {};
+                    if (toFetch.length) {
+                        await Promise.all(toFetch.map(async (item) => {
+                            try {
+                                const appRef = window.firebase.doc(db, 'applications', item.id);
+                                const snap = await window.firebase.getDoc(appRef);
+                                if (snap.exists()) {
+                                    fetchedMap[item.id] = snap.data();
+                                }
+                            } catch (e) {
+                                console.warn('Fetch application failed for', item.id, e); 
+                            }
+                        }));
+                    }
+
                     const rows = dataset.map(item => {
+                        const appData = fetchedMap[item.id] || {};
+                        const firstName = item.firstName || appData.firstName || '';
+                        const lastName = item.lastName || appData.lastName || '';
+                        const email = item.email || item.authenticatedUser?.email || appData.email || '';
+                        const phone = item.phone || appData.phone || '';
+                        const regNumber = item.regNumber || appData.regNumber || '';
+                        const deptP = item.departmentPrimary || item.department || appData.departmentPrimary || appData.department || '';
+                        const deptS = item.departmentSecondary || appData.departmentSecondary || '';
                         const slotId = item.interviewSlot || 'NaN';
                         const slotLabel = item.interviewSlot ? (this.slotMap[item.interviewSlot] || item.interviewSlot) : 'NaN';
+                        const note = item.interviewNote || '';
                         let updatedAt = '';
                         const ts = item.interviewSlotUpdatedAt || item.reviewedAt;
                         if (ts) {
                             if (ts.seconds) updatedAt = new Date(ts.seconds * 1000).toISOString();
                             else if (typeof ts === 'string') updatedAt = new Date(ts).toISOString();
                             else if (ts instanceof Date) updatedAt = ts.toISOString();
-                        } else {
-                            updatedAt = '';
                         }
+                        const skills = item.skills || appData.skills || '';
+                        const motivation = item.motivation || appData.motivation || '';
+                        const contribution = item.contribution || appData.contribution || '';
+
                         return [
-                            item.firstName || '',
-                            item.lastName || '',
-                            item.email || item.authenticatedUser?.email || '',
-                            item.departmentPrimary || item.department || '',
-                            item.departmentSecondary || '',
+                            firstName,
+                            lastName,
+                            email,
+                            phone,
+                            regNumber,
+                            deptP,
+                            deptS,
                             slotId,
                             slotLabel,
-                            item.interviewNote || '',
+                            note,
                             updatedAt,
+                            skills,
+                            motivation,
+                            contribution,
                             item.id || ''
                         ];
                     });
 
-                    const csv = [headers, ...rows].map(r => r.map(f => `"${String(f).replace(/"/g, '""')}"`).join(',')).join('\n');
+                    const csv = [headers, ...rows]
+                        .map(r => r.map(f => '"' + String(f).replace(/"/g, '""') + '"').join(','))
+                        .join('\n');
                     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
                     const link = document.createElement('a');
                     const url = URL.createObjectURL(blob);
@@ -1616,6 +1669,8 @@
                 } catch (err) {
                     console.error('Export shortlisted CSV failed:', err);
                     alert('Export failed. Please try again.');
+                } finally {
+                    if (btn) { btn.disabled = false; btn.textContent = ' Export Slots CSV'; }
                 }
             }
 
@@ -1635,6 +1690,84 @@
                     if (this.tabBtnApplications) this.tabBtnApplications.classList.add('active');
                     if (location.hash) history.replaceState(null, '', ' ');
                 }
+            }
+
+            async showShortlistedDetails(shortlistedId) {
+                try {
+                    const record = this.shortlisted.find(s => s.id === shortlistedId);
+                    if (!record) {
+                        alert('Record not found');
+                        return;
+                    }
+                    // Attempt to fetch application document with same ID for extra fields (phone, regNumber, responses)
+                    let appData = null;
+                    try {
+                        const appRef = window.firebase.doc(window.firebase.db, 'applications', shortlistedId);
+                        const appSnap = await window.firebase.getDoc(appRef);
+                        if (appSnap.exists()) appData = appSnap.data();
+                    } catch (e) {
+                        console.warn('Unable to load application doc for shortlisted', shortlistedId, e);
+                    }
+
+                    const firstName = record.firstName || appData?.firstName || '';
+                    const lastName = record.lastName || appData?.lastName || '';
+                    const fullName = (firstName + ' ' + lastName).trim() || 'N/A';
+                    const email = record.email || record.authenticatedUser?.email || appData?.email || 'N/A';
+                    const phone = record.phone || appData?.phone || 'N/A';
+                    const regNumber = record.regNumber || appData?.regNumber || 'N/A';
+                    const deptP = record.departmentPrimary || record.department || appData?.departmentPrimary || appData?.department || 'N/A';
+                    const deptS = record.departmentSecondary || appData?.departmentSecondary || 'N/A';
+                    const slotId = record.interviewSlot || 'NaN';
+                    const slotLabel = record.interviewSlot ? (this.slotMap[record.interviewSlot] || record.interviewSlot) : 'Not Selected';
+                    const note = record.interviewNote || '';
+                    // Responses (use application if present, else record fallback)
+                    const skills = appData?.skills || record.skills || '';
+                    const motivation = appData?.motivation || record.motivation || '';
+                    const contribution = appData?.contribution || record.contribution || '';
+
+                    // Build safe detail list (exclude: applicationId, reviewedBy, reviewedAt, reviewStatus, submitted)
+                    const rows = [
+                        ['Name', fullName],
+                        ['Email', email],
+                        ['Phone', phone],
+                        ['Registration Number', regNumber],
+                        ['Primary Department', deptP],
+                        ['Secondary Department', deptS !== deptP ? deptS : ''],
+                        ['Interview Slot', slotLabel + (slotId && slotId !== 'NaN' ? ` (${slotId})` : '')],
+                        ['Slot Note', note],
+                        ['Skills', skills],
+                        ['Motivation', motivation],
+                        ['Contribution', contribution]
+                    ].filter(r => r[1] && r[1] !== '');
+
+                    const modal = document.createElement('div');
+                    modal.style.cssText = `position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;z-index:10000;backdrop-filter:blur(2px);`;
+                    const card = document.createElement('div');
+                    card.style.cssText = `background:#ffffff;border-radius:18px;max-width:640px;width:92%;max-height:80vh;overflow:auto;padding:24px;box-shadow:0 20px 40px rgba(0,0,0,0.25);font-family:inherit;`; 
+                    card.innerHTML = `
+                        <h2 style="margin-top:0;font-size:1.4rem;color:#333;">Candidate Details</h2>
+                        <table style="width:100%;border-collapse:collapse;font-size:0.9rem;">
+                            <tbody>
+                                ${rows.map(([k,v]) => `<tr><th style='text-align:left;padding:6px 8px;border-bottom:1px solid #eee;width:40%;color:#555;'>${k}</th><td style='padding:6px 8px;border-bottom:1px solid #f2f2f2;color:#222;'>${this.escapeHTML(String(v)).replace(/\n/g,'<br>')}</td></tr>`).join('')}
+                            </tbody>
+                        </table>
+                        <div style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end;">
+                            <button id="shortlisted-modal-close" style="background:#667eea;color:#fff;border:none;padding:10px 18px;border-radius:8px;font-weight:600;cursor:pointer;">Close</button>
+                        </div>
+                    `;
+                    modal.appendChild(card);
+                    document.body.appendChild(modal);
+                    document.getElementById('shortlisted-modal-close').addEventListener('click', () => modal.remove());
+                    modal.addEventListener('click', (e)=>{ if(e.target===modal) modal.remove(); });
+                } catch (err) {
+                    console.error('showShortlistedDetails error', err);
+                    alert('Unable to display details');
+                }
+            }
+
+            // Small HTML escaper reused from applications detail logic if needed
+            escapeHTML(str) {
+                return str.replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
             }
 
             async checkApplicationReviewStatus(appId) {
