@@ -108,6 +108,31 @@
     <!-- Security Utilities -->
     <script src="security-utils.js"></script>
     
+    <!-- Maintenance mode styles: hide public form and sign-in on front page -->
+    <style id="maintenance-hide-form">
+        /* Hide the recruitment form and authentication prompts while keeping DOM present */
+        #recruitment-form-container,
+        #recruitment-form,
+        #auth-overlay,
+        #form-restriction-notice,
+        #direct-google-sign-in-btn,
+        #shortlist-notice,
+        #user-info-bar,
+        #google-sign-in-btn,
+        .direct-google-auth-btn,
+        .auth-container,
+        .auth-card,
+        #user-info-bar {
+            display: none !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+            opacity: 0 !important;
+        }
+
+        /* Keep the recruitment header visible (optional) - comment out to hide header too */
+        #recruitment-header { display: block !important; visibility: visible !important; opacity: 1 !important; }
+    </style>
+
 </head>
 
 <body>
@@ -120,7 +145,7 @@
                 <a href="#page1" id="home-link">HOME</a>
                 <a href="#moto" id="about-link">ABOUT</a>
                 <a href="#page2" id="register-link">DEPARTMENTS</a>
-                <a href="#page4" id="recruitment-link">APPLY NOW</a>
+                <a href="#page4" id="recruitment-link">RESULTS</a>
             </div>
         </div>
     </div>
@@ -462,10 +487,10 @@
 
             <div id="recruitment-section">
                 <div id="recruitment-header">
-                    <h2>SELECT INTERVIEW TIMESLOT</h2>
-                    <h3>Shortlisted Candidates can select their preferred timeslot for interview round.</h3>
+                    <h2>RESULTS WILL BE ANNOUNCED SOON</h2>
+                    <h3>Stay tuned!</h3>
                     <!-- <h4>PLEASE SELECT YOUR SLOT BEFORE 12TH SEPTEMBER 20:00 HRS</h4> -->
-                    <p>Sign in to check if you were shortlisted.</p>
+                    <p>Follow our socials to know when the results are announced.</p>
                 </div>
                 
                 <!-- Recruitment Form -->
@@ -484,7 +509,7 @@
                                     <option value="2025-09-12_21:00-23:00">Sept 12, 2025 — 21:00–23:00</option>
                                     <option value="2025-09-13_10:00-12:30">Sept 13, 2025 — 10:00–12:30</option>
                                     <option value="2025-09-13_21:00-23:30">Sept 13, 2025 — 21:00-23:30</option>
-                                    <option value="2025-09-14_10:00-12:30">Sept 13, 2025 — 10:00-12:30</option>
+                                    <option value="2025-09-14_10:00-12:30">Sept 14, 2025 — 10:00-12:30</option>
                                     <option value="2025-09-14_21:00-22:30">Sept 14, 2025 — 21:00-22:30</option>
                                 </select>
                             </div>
@@ -1870,8 +1895,11 @@
                 });
             });
 
-            // Form submission
-            recruitmentForm.addEventListener('submit', async function(e) {
+            // Form submission (attach handler only if element exists). When form is hidden in maintenance mode,
+            // this prevents runtime errors from attempting to attach listeners to null.
+            // recruitmentForm is declared earlier as: const recruitmentForm = document.getElementById('recruitment-form');
+            if (typeof recruitmentForm !== 'undefined' && recruitmentForm && recruitmentForm.addEventListener) {
+                recruitmentForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
                 e.stopPropagation();
 
