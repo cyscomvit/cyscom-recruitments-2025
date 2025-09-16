@@ -29,7 +29,7 @@ class RecruitmentPortal {
                 "Monish Dasari", "Shresth Sahay", "Sarthak Shinde", "Anayy Jhawar", "Udarsh Goyal", 
                 "Rohit Anish", "Avinash Jeevan", "Ishan Nagpure", "Daniyyel Franx", "Maya V S", 
                 "Hari Padmesh Kanagaraj", "Vishal Prabhu", "Ansh Mittal", "Kritika Kumari", 
-                "Saras Singhal", "Prateek Gogia", "Srijan Tiwari", "Priyadharshini S", 
+                "Saras Singhal", "Prateet Gogia", "Srijan Tiwari", "Priyadharshini S", 
                 "Rushil Goyal", "Ram Krishna Subbaraman"
             ],
             'em': [
