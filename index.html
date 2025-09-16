@@ -2342,6 +2342,7 @@
                     showLoadingState(false);
                 }
             });
+            }
 
             // Helper function to determine sanitization type
             function getSanitizationType(fieldName) {
@@ -2733,10 +2734,12 @@
                 }, 5000);
             }
 
-            // Security: Disable right-click on form (basic protection)
-            recruitmentForm.addEventListener('contextmenu', function(e) {
-                e.preventDefault();
-            });
+            // Security: Disable right-click on form (basic protection) if form exists
+            if (typeof recruitmentForm !== 'undefined' && recruitmentForm && recruitmentForm.addEventListener) {
+                recruitmentForm.addEventListener('contextmenu', function(e) {
+                    e.preventDefault();
+                });
+            }
 
             // Security: Disable copy/paste on sensitive fields
             const sensitiveFields = ['regNumber', 'phone'];
