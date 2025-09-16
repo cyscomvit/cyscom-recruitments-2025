@@ -28,9 +28,9 @@ class RecruitmentPortal {
                 "Adish Vipin", "Parth Mishra", "Vardaa Maheshwari", "Akshay Katti", "Harsh Sharma", 
                 "Monish Dasari", "Shresth Sahay", "Sarthak Shinde", "Anayy Jhawar", "Udarsh Goyal", 
                 "Rohit Anish", "Avinash Jeevan", "Ishan Nagpure", "Daniyyel Franx", "Maya V S", 
-                "Hari Padmesh Kanagaraj", "Vishal Prabhu", "Ansh Mittal", "Ram Krishna Subbaraman", 
-                "Kritika Kumari", "Saras Singhal", "Prateek Gogia", "Srijan Tiwari", "Priyadharshini S", 
-                "Rushil Goyal"
+                "Hari Padmesh Kanagaraj", "Vishal Prabhu", "Ansh Mittal", "Kritika Kumari", 
+                "Saras Singhal", "Prateek Gogia", "Srijan Tiwari", "Priyadharshini S", 
+                "Rushil Goyal", "Ram Krishna Subbaraman"
             ],
             'em': [
                 "Shivam Singh", "Nekkanti Aishani", "Tanishi Srivastava", "Joeliyn Calista", "Srishti Swaroop",
@@ -41,14 +41,14 @@ class RecruitmentPortal {
                 "Divya Dharshini", "Nivedita S", "Joon Mukherjee", "Chinmay Singh", "Godwin K S", "Vatshal Pandey"
             ],
             'sm': [
-                "Shubh Kothari", "Rohit Anish", "Judith Igdaliah Ebenezar", "Shree Devi", "Shivangi Suman",
+                "Shubh Kothari", "Rohit Anish", "Shree Devi", "Shivangi Suman",
                 "Ardhra Arunkumar", "Joshita K", "Siddharth S", "Shivani Pallath", "Rucheera Tamaskar",
-                "Yukti Kapoor", "Joshitha A", "Shanil Singh"
+                "Yukti Kapoor", "Joshitha A", "Shanil Singh","Judith Igdaliah Ebenezar"
             ],
             'content': [
                 "Gitika M", "Sugeeth Jayaraj S A", "Abhimantr Singh", "UTKARSH RAJ", "Uthraa R",
-                "Yokash H", "Vardaa Maheshwari", "Abdul Rahman", "Kaviyavarshini Natarajan", "Parth Mishra",
-                "Pragati Sunil", "Revathi Rao Meka"
+                "Yokash H", "Vardaa Maheshwari", "Abdul Rahman", "Parth Mishra",
+                "Pragati Sunil", "Revathi Rao Meka", "Kaviyavarshini Natarajan"
             ]
         };
 
